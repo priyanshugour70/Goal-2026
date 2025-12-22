@@ -208,7 +208,7 @@ fun TaskItem(
     modifier: Modifier = Modifier
 ) {
     val priorityColor = Color(task.priority.color)
-    val completedColor = Color.Gray // Define completed color locally if not available
+    val completedColor = com.lssgoo.goal2026.ui.theme.completedColor
     
     Card(
         modifier = modifier

@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.lssgoo.goal2026.data.model.Gender
 import com.lssgoo.goal2026.data.model.UserProfile
 import com.lssgoo.goal2026.ui.theme.GradientColors
+import com.lssgoo.goal2026.ui.components.AppIcons
 import java.text.SimpleDateFormat
 import java.util.*
 

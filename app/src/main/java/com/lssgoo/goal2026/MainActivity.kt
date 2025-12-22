@@ -44,6 +44,7 @@ import com.lssgoo.goal2026.ui.screens.goals.GoalDetailScreen
 import com.lssgoo.goal2026.ui.screens.goals.GoalsScreen
 import com.lssgoo.goal2026.ui.screens.notes.NotesScreen
 import com.lssgoo.goal2026.ui.screens.onboarding.OnboardingScreen
+import com.lssgoo.goal2026.ui.screens.reminders.RemindersScreen
 import com.lssgoo.goal2026.ui.screens.settings.SettingsScreen
 import com.lssgoo.goal2026.ui.screens.tasks.TasksScreen
 import com.lssgoo.goal2026.ui.theme.Goal2026Theme

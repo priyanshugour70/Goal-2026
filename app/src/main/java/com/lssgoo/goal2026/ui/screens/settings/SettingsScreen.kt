@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lssgoo.goal2026.data.model.*
 import com.lssgoo.goal2026.ui.theme.*
+import com.lssgoo.goal2026.ui.components.AppIcons
 import com.lssgoo.goal2026.ui.viewmodel.Goal2026ViewModel
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -39,6 +40,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val userProfile by viewModel.userProfile.collectAsState()
     val settings by viewModel.settings.collectAsState()
     val stats by viewModel.dashboardStats.collectAsState()
     
@@ -384,6 +386,7 @@ fun ProfileCard(
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
+                        Text(
                             text = userProfile?.occupation ?: "2026 Goal Crusher",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.8f)

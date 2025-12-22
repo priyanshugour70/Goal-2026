@@ -4,8 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.lssgoo.goal2026.data.model.*
 import com.lssgoo.goal2026.ui.components.*
 import com.lssgoo.goal2026.ui.theme.GradientColors
@@ -157,9 +158,9 @@ fun ReminderListItem(
             ) {
                 Icon(
                     imageVector = when(reminder.priority) {
-                        CalendarItemPriority.HIGH -> AppIcons.PriorityHigh
-                        CalendarItemPriority.MEDIUM -> AppIcons.Notifications
-                        CalendarItemPriority.LOW -> AppIcons.NotificationsNone
+                        ItemPriority.P1, ItemPriority.P2, ItemPriority.P3 -> AppIcons.PriorityHigh
+                        ItemPriority.P4, ItemPriority.P5, ItemPriority.P6 -> AppIcons.Notifications
+                        else -> AppIcons.NotificationsNone
                     },
                     contentDescription = null,
                     tint = Color(reminder.color),
@@ -225,7 +226,7 @@ fun ReminderEditorSheet(
 ) {
     var title by remember { mutableStateOf(reminder?.title ?: "") }
     var description by remember { mutableStateOf(reminder?.description ?: "") }
-    var priority by remember { mutableStateOf(reminder?.priority ?: CalendarItemPriority.MEDIUM) }
+    var priority by remember { mutableStateOf(reminder?.priority ?: ItemPriority.P5) }
     var reminderTime by remember { mutableLongStateOf(reminder?.reminderTime ?: System.currentTimeMillis()) }
     var repeatType by remember { mutableStateOf(reminder?.repeatType ?: RepeatType.NONE) }
     var linkedGoalId by remember { mutableStateOf(reminder?.linkedGoalId) }
@@ -308,11 +309,11 @@ fun ReminderEditorSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
-                CalendarItemPriority.entries.forEach { p ->
+                ItemPriority.entries.filter { it.level in listOf(1, 5, 10) }.forEach { p ->
                     FilterChip(
                         selected = priority == p,
                         onClick = { priority = p },
-                        label = { Text(p.name.lowercase().capitalize()) },
+                        label = { Text(p.displayName) },
                         leadingIcon = if (priority == p) {
                             { Icon(AppIcons.Check, null, Modifier.size(16.dp)) }
                         } else null
@@ -352,7 +353,7 @@ fun ReminderEditorSheet(
                         label = { Text("None") }
                     )
                 }
-                items(goals) { goal ->
+                items(goals) { goal: Goal ->
                     FilterChip(
                         selected = linkedGoalId == goal.id,
                         onClick = { linkedGoalId = goal.id },
