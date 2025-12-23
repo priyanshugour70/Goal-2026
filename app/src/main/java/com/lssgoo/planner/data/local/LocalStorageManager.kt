@@ -337,7 +337,7 @@ class LocalStorageManager(context: Context) {
      */
     fun exportAllData(): String {
         val appData = AppData(
-            version = 2,
+            version = 3,
             exportedAt = System.currentTimeMillis(),
             goals = getGoals(),
             notes = getNotes(),

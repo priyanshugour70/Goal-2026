@@ -242,7 +242,7 @@ fun NameStep(
             leadingIcon = {
                 Icon(Icons.Outlined.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
-            colors = TextFieldDefaults.outlinedTextFieldColors(
+            colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
             )
@@ -267,7 +267,7 @@ fun NameStep(
             leadingIcon = {
                 Icon(Icons.Outlined.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
-            colors = TextFieldDefaults.outlinedTextFieldColors(
+            colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
             )
@@ -597,7 +597,7 @@ fun DetailsStep(
             leadingIcon = {
                 Icon(Icons.Outlined.Email, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
-            colors = TextFieldDefaults.outlinedTextFieldColors(
+            colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
             )
@@ -623,7 +623,7 @@ fun DetailsStep(
                 Icon(Icons.Outlined.Work, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
             placeholder = { Text("e.g., Software Engineer") },
-            colors = TextFieldDefaults.outlinedTextFieldColors(
+            colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
             )
