@@ -17,6 +17,8 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     
     private val storageManager = LocalStorageManager(application)
     
+    private val syncRepository = com.lssgoo.planner.data.repository.SyncRepository(application)
+    
     private val _settings = MutableStateFlow(storageManager.getSettings())
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
     
@@ -25,11 +27,36 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     
     private val _isOnboardingComplete = MutableStateFlow(storageManager.isOnboardingComplete())
     val isOnboardingComplete: StateFlow<Boolean> = _isOnboardingComplete.asStateFlow()
+
+    private val _isCheckingSync = MutableStateFlow(false)
+    val isCheckingSync: StateFlow<Boolean> = _isCheckingSync.asStateFlow()
+
+    init {
+        checkCloudBackup()
+    }
+
+    private fun checkCloudBackup() {
+        if (!_isOnboardingComplete.value) {
+            viewModelScope.launch {
+                _isCheckingSync.value = true
+                val restored = syncRepository.checkAndDownloadBackup()
+                if (restored) {
+                    _userProfile.value = storageManager.getUserProfile() ?: UserProfile()
+                    _isOnboardingComplete.value = storageManager.isOnboardingComplete()
+                    _settings.value = storageManager.getSettings()
+                    showSnackbar("Data restored from cloud!")
+                }
+                _isCheckingSync.value = false
+            }
+        }
+    }
     
     fun saveUserProfile(profile: UserProfile) {
         viewModelScope.launch {
             storageManager.saveUserProfile(profile)
             _userProfile.value = profile
+            // Sync to cloud when profile is saved or onboarding complete
+            syncToCloud()
         }
     }
     
@@ -37,6 +64,7 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
         viewModelScope.launch {
             storageManager.setOnboardingComplete()
             _isOnboardingComplete.value = true
+            syncToCloud()
         }
     }
     
@@ -44,6 +72,7 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
         viewModelScope.launch {
             storageManager.saveSettings(newSettings)
             _settings.value = newSettings
+            syncToCloud()
         }
     }
     
@@ -60,8 +89,35 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     }
     
     val lastSyncTime = MutableStateFlow(System.currentTimeMillis())
-    fun syncToCloud() {}
-    fun syncFromCloud() {}
+    
+    fun syncToCloud() {
+        viewModelScope.launch {
+            _isSyncing.value = true
+            val (success, error) = syncRepository.syncToCloud()
+            _isSyncing.value = false
+            if (success) {
+                lastSyncTime.value = System.currentTimeMillis()
+            } else if (error != null) {
+                showSnackbar("Cloud sync failed: $error")
+            }
+        }
+    }
+    
+    fun syncFromCloud() {
+        viewModelScope.launch {
+            _isCheckingSync.value = true
+            val restored = syncRepository.checkAndDownloadBackup()
+            if (restored) {
+                _userProfile.value = storageManager.getUserProfile() ?: UserProfile()
+                _isOnboardingComplete.value = storageManager.isOnboardingComplete()
+                _settings.value = storageManager.getSettings()
+                showSnackbar("Data restored!")
+            } else {
+                showSnackbar("No cloud backup found or restored")
+            }
+            _isCheckingSync.value = false
+        }
+    }
     fun exportDataToFile(context: Context): android.net.Uri? = null
     fun importData(json: String): Boolean = true
     fun initializeAutoSync() {}
@@ -103,17 +159,37 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     fun addReminder(r: Reminder) {}
     fun updateReminder(r: Reminder) {}
     fun deleteReminder(id: String) {}
-    fun addJournalEntry(e: JournalEntry) {}
+    fun addJournalEntry(e: JournalEntry) {
+        viewModelScope.launch {
+            storageManager.addJournalEntry(e)
+            syncToCloud()
+        }
+    }
     fun updateTransaction(tr: Transaction) {}
     fun deleteTransaction(id: String) {}
-    fun addTransaction(tr: Transaction) {}
+    fun addTransaction(tr: Transaction) {
+        viewModelScope.launch {
+            storageManager.addTransaction(tr)
+            syncToCloud()
+        }
+    }
     fun addBudget(b: Budget) {}
     fun removeBudget(id: String) {}
-    fun addHabit(h: Habit) {}
+    fun addHabit(h: Habit) {
+        viewModelScope.launch {
+            storageManager.addHabit(h)
+            syncToCloud()
+        }
+    }
     fun getHabitStats(id: String): HabitStats = HabitStats(id)
     fun getHabitEntriesForDate(d: Long): List<HabitEntry> = emptyList()
     fun toggleHabitEntry(id: String, d: Long) {}
-    fun addNote(n: Note) {}
+    fun addNote(n: Note) {
+        viewModelScope.launch {
+            storageManager.addNote(n)
+            syncToCloud()
+        }
+    }
     fun updateNote(n: Note) {}
     fun deleteNote(id: String) {}
     fun toggleNotePin(id: String) {}

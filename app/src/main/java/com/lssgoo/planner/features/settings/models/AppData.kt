@@ -20,6 +20,7 @@ data class AppData(
     val transactions: List<Transaction>? = null,
     val budgets: List<Budget>? = null,
     val logs: List<FinanceLog>? = null,
+    val userProfile: UserProfile? = null,
     val settings: AppSettings = AppSettings()
 )
 

@@ -350,6 +350,7 @@ class LocalStorageManager(context: Context) {
             transactions = getTransactions(),
             budgets = getBudgets(),
             logs = getFinanceLogs(),
+            userProfile = getUserProfile(),
             settings = getSettings()
         )
         return gson.toJson(appData)
@@ -377,6 +378,7 @@ class LocalStorageManager(context: Context) {
                 appData.logs?.let { saveFinanceLogs(it) }
             }
             saveHabitEntries(appData.habitEntries)
+            appData.userProfile?.let { saveUserProfile(it) }
             saveSettings(appData.settings)
             prefs.edit().putLong(KEY_LAST_SYNC, System.currentTimeMillis()).apply()
             true

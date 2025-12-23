@@ -83,10 +83,7 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
     }
     
     if (!isOnboardingComplete) {
-        OnboardingScreen(onComplete = { profile ->
-            rootViewModel.saveUserProfile(profile)
-            rootViewModel.setOnboardingComplete(true)
-        })
+        OnboardingScreen(viewModel = rootViewModel)
     } else {
         val showBottomBar = currentRoute in BottomNavDestination.entries.map { it.route }
         
