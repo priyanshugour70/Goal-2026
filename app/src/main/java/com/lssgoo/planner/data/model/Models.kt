@@ -22,10 +22,7 @@ typealias CalendarEvent = com.lssgoo.planner.features.tasks.models.CalendarEvent
 typealias Note = com.lssgoo.planner.features.notes.models.Note
 
 // Re-export Habits models
-typealias Habit = com.lssgoo.planner.features.habits.models.Habit
-typealias HabitEntry = com.lssgoo.planner.features.habits.models.HabitEntry
-typealias HabitStats = com.lssgoo.planner.features.habits.models.HabitStats
-typealias HabitFrequency = com.lssgoo.planner.features.habits.models.HabitFrequency
+// Removed to avoid ambiguity with main package imports
 
 // Re-export Journal models  
 typealias JournalEntry = com.lssgoo.planner.features.journal.models.JournalEntry
@@ -62,35 +59,11 @@ typealias SearchFilters = com.lssgoo.planner.features.search.models.SearchFilter
 typealias UserProfile = com.lssgoo.planner.features.settings.models.UserProfile
 typealias Gender = com.lssgoo.planner.features.settings.models.Gender
 
-// Dashboard Stats model (shared across app)
-data class DashboardStats(
-    val totalGoals: Int = 0,
-    val completedMilestones: Int = 0,
-    val totalMilestones: Int = 0,
-    val tasksCompletedToday: Int = 0,
-    val totalTasksToday: Int = 0,
-    val currentStreak: Int = 0,
-    val longestStreak: Int = 0,
-    val overallProgress: Float = 0f
-)
+// Dashboard Stats model
+typealias DashboardStats = com.lssgoo.planner.features.settings.models.DashboardStats
 
 // App Data for backup/restore
-data class AppData(
-    val version: Int = 3,
-    val exportedAt: Long = System.currentTimeMillis(),
-    val goals: List<com.lssgoo.planner.features.goals.models.Goal> = emptyList(),
-    val notes: List<com.lssgoo.planner.features.notes.models.Note> = emptyList(),
-    val tasks: List<com.lssgoo.planner.features.tasks.models.Task> = emptyList(),
-    val events: List<com.lssgoo.planner.features.tasks.models.CalendarEvent> = emptyList(),
-    val reminders: List<com.lssgoo.planner.features.reminders.models.Reminder>? = null,
-    val habitEntries: List<com.lssgoo.planner.features.habits.models.HabitEntry> = emptyList(),
-    val habits: List<com.lssgoo.planner.features.habits.models.Habit>? = null,
-    val journalEntries: List<com.lssgoo.planner.features.journal.models.JournalEntry>? = null,
-    val transactions: List<com.lssgoo.planner.features.finance.models.Transaction>? = null,
-    val budgets: List<com.lssgoo.planner.features.finance.models.Budget>? = null,
-    val logs: List<com.lssgoo.planner.features.finance.models.FinanceLog>? = null,
-    val settings: com.lssgoo.planner.features.settings.models.AppSettings = com.lssgoo.planner.features.settings.models.AppSettings()
-)
+typealias AppData = com.lssgoo.planner.features.settings.models.AppData
 
 // Analytics data model
 data class AnalyticsData(

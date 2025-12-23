@@ -78,5 +78,9 @@ enum class CalendarItemType(val displayName: String, val iconName: String) {
     NOTE("Note", "StickyNote2"),
     REMINDER("Reminder", "Alarm"),
     EVENT("Event", "Event"),
-    GOAL_MILESTONE("Milestone", "Flag")
+    GOAL_MILESTONE("Milestone", "Flag"),
+    HABIT("Habit", "CheckCircle"),
+    JOURNAL("Journal", "HistoryEdu"),
+    FINANCE("Finance", "Payments"),
+    GOAL("Goal", "EmojiEvents")
 }

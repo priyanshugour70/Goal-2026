@@ -10,8 +10,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,10 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lssgoo.planner.data.model.Goal
 import com.lssgoo.planner.data.model.GoalCategory
-import com.lssgoo.planner.data.model.Milestone
+import com.lssgoo.planner.features.goals.models.Milestone
+import com.lssgoo.planner.features.goals.models.MilestoneQuality
 import com.lssgoo.planner.ui.components.AnimatedProgressBar
 import com.lssgoo.planner.ui.components.getIcon
 import com.lssgoo.planner.ui.theme.GradientColors
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Shared components for the Goals feature
@@ -161,34 +167,123 @@ fun GoalDetailHeader(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun MilestoneItem(
     milestone: Milestone,
     goalColor: Color,
     onToggle: () -> Unit,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val dateFormat = remember { SimpleDateFormat("MMM d", Locale.getDefault()) }
+    
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = if (milestone.isCompleted) Color(0xFF4CAF50).copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (milestone.isCompleted) {
+                Color(milestone.quality?.color ?: 0xFF4CAF50).copy(alpha = 0.08f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onToggle, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    imageVector = if (milestone.isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
-                    contentDescription = null,
-                    tint = if (milestone.isCompleted) Color(0xFF4CAF50) else goalColor,
-                    modifier = Modifier.size(28.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = onToggle,
+                    onLongClick = onEdit
+                )
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onToggle, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = if (milestone.isCompleted) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                        contentDescription = null,
+                        tint = if (milestone.isCompleted) Color(milestone.quality?.color ?: 0xFF4CAF50) else goalColor,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = milestone.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        textDecoration = if (milestone.isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
+                    )
+                    
+                    if (milestone.targetDate != null || milestone.isCompleted) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (milestone.targetDate != null && !milestone.isCompleted) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = dateFormat.format(Date(milestone.targetDate)),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            
+                            if (milestone.isCompleted && milestone.quality != null) {
+                                Surface(
+                                    color = Color(milestone.quality.color).copy(alpha = 0.15f),
+                                    shape = CircleShape
+                                ) {
+                                    Text(
+                                        text = milestone.quality.displayName,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(milestone.quality.color),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                
+                                milestone.rating?.let { rate ->
+                                    Row {
+                                        repeat(rate) {
+                                            Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFFFFC107))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+                }
+            }
+            
+            if (milestone.isCompleted && milestone.description != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = milestone.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp,
+                    modifier = Modifier.padding(start = 44.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = milestone.title,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
-                textDecoration = if (milestone.isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
-            )
         }
     }
 }

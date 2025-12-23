@@ -1,8 +1,11 @@
 package com.lssgoo.planner.features.notes.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
@@ -11,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +34,7 @@ import com.lssgoo.planner.data.model.*
 import com.lssgoo.planner.ui.components.*
 import com.lssgoo.planner.ui.viewmodel.PlannerViewModel
 import com.lssgoo.planner.features.notes.components.NoteCard
-import com.lssgoo.planner.ui.theme.NoteColors
+import com.lssgoo.planner.features.notes.models.NoteColors
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,8 +47,17 @@ fun NotesScreen(
     val notes by viewModel.notes.collectAsState()
     var showAddNoteSheet by remember { mutableStateOf(false) }
     var editingNote by remember { mutableStateOf<Note?>(null) }
+    var noteToUnlock by remember { mutableStateOf<Note?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var isGridView by remember { mutableStateOf(true) }
+    
+    val handleNoteClick = { note: Note ->
+        if (note.isLocked) {
+            noteToUnlock = note
+        } else {
+            editingNote = note
+        }
+    }
     
     val filteredNotes = if (searchQuery.isBlank()) {
         notes.sortedByDescending { it.isPinned }
@@ -91,7 +104,7 @@ fun NotesScreen(
                     }
                     IconButton(onClick = { isGridView = !isGridView }, modifier = Modifier.size(36.dp)) {
                         Icon(
-                            imageVector = if (isGridView) Icons.Filled.ViewAgenda else Icons.Filled.GridView,
+                            imageVector = if (isGridView) Icons.Default.List else Icons.Default.GridView,
                             contentDescription = "Toggle view",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
@@ -114,26 +127,51 @@ fun NotesScreen(
                 .padding(paddingValues)
         ) {
             // Search bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Search notes...") },
-                leadingIcon = {
-                    Icon(Icons.Filled.Search, contentDescription = "Search")
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotBlank()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Filled.Close, contentDescription = "Clear")
-                        }
-                    }
-                },
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                singleLine = true
-            )
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 3.dp,
+                shadowElevation = 2.dp
+            ) {
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { 
+                        Text(
+                            "Search your thoughts...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        ) 
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Filled.Search, 
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Filled.Close, contentDescription = "Clear")
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+            }
             
             if (filteredNotes.isEmpty()) {
                 EmptyState(
@@ -143,7 +181,7 @@ fun NotesScreen(
                     else "Try a different search term",
                     icon = Icons.Outlined.StickyNote2,
                     actionText = if (searchQuery.isBlank()) "Create Note" else null,
-                    onActionClick = if (searchQuery.isBlank()) {{ showAddNoteSheet = true }} else null,
+                    onActionClick = if (searchQuery.isBlank()) { { showAddNoteSheet = true } } else null,
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
@@ -151,66 +189,73 @@ fun NotesScreen(
                     LazyVerticalStaggeredGrid(
                         columns = StaggeredGridCells.Fixed(2),
                         contentPadding = PaddingValues(
-                            start = 12.dp,
-                            end = 12.dp,
-                            bottom = 100.dp
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 8.dp,
+                            bottom = 120.dp
                         ),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalItemSpacing = 8.dp
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalItemSpacing = 12.dp
                     ) {
                         if (pinnedNotes.isNotEmpty()) {
-                            item {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                            item(span = StaggeredGridItemSpan.FullLine) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
+                                ) {
                                     Icon(
                                         AppIcons.PushPin,
                                         contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
+                                        modifier = Modifier.size(14.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "Pinned",
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(vertical = 8.dp)
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
-                            item { Spacer(modifier = Modifier.height(1.dp)) }
                         }
                         
-                        items(pinnedNotes, key = { it.id }) { note ->
+                        items(pinnedNotes, key = { "grid_${it.id}" }) { note ->
                             NoteCard(
                                 note = note,
-                                onClick = { editingNote = note }
+                                onClick = { handleNoteClick(note) },
+                                onLongClick = { viewModel.toggleNotePin(note.id) }
                             )
                         }
                         
                         if (otherNotes.isNotEmpty() && pinnedNotes.isNotEmpty()) {
-                            item {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                            item(span = StaggeredGridItemSpan.FullLine) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)
+                                ) {
                                     Icon(
                                         AppIcons.Notes,
                                         contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
+                                        modifier = Modifier.size(14.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "Others",
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(vertical = 8.dp)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
-                            item { Spacer(modifier = Modifier.height(1.dp)) }
                         }
                         
-                        items(otherNotes, key = { it.id }) { note ->
+                        items(otherNotes, key = { "grid_${it.id}" }) { note ->
                             NoteCard(
                                 note = note,
-                                onClick = { editingNote = note }
+                                onClick = { handleNoteClick(note) },
+                                onLongClick = { viewModel.toggleNotePin(note.id) }
                             )
                         }
                     }
@@ -240,10 +285,11 @@ fun NotesScreen(
                                 }
                             }
                             
-                            items(pinnedNotes, key = { it.id }) { note ->
+                            items(pinnedNotes, key = { "list_${it.id}" }) { note ->
                                 NoteListItem(
                                     note = note,
-                                    onClick = { editingNote = note }
+                                    onClick = { handleNoteClick(note) },
+                                    onTogglePin = { viewModel.toggleNotePin(note.id) }
                                 )
                             }
                         }
@@ -269,10 +315,11 @@ fun NotesScreen(
                                 }
                             }
                             
-                            items(otherNotes, key = { it.id }) { note ->
+                            items(otherNotes, key = { "list_${it.id}" }) { note ->
                                 NoteListItem(
                                     note = note,
-                                    onClick = { editingNote = note }
+                                    onClick = { handleNoteClick(note) },
+                                    onTogglePin = { viewModel.toggleNotePin(note.id) }
                                 )
                             }
                         }
@@ -282,6 +329,28 @@ fun NotesScreen(
                 }
             }
         }
+    }
+    
+    // Unlock Dialog
+    if (noteToUnlock != null) {
+        AlertDialog(
+            onDismissRequest = { noteToUnlock = null },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+            content = {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    com.lssgoo.planner.features.settings.screens.PinLockScreen(
+                        viewModel = viewModel,
+                        onUnlockSuccess = {
+                            editingNote = noteToUnlock
+                            noteToUnlock = null
+                        }
+                    )
+                }
+            }
+        )
     }
     
     // Add/Edit Note Sheet
@@ -316,70 +385,109 @@ fun NotesScreen(
 fun NoteListItem(
     note: Note,
     onClick: () -> Unit,
+    onTogglePin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val noteColor = Color(note.color)
+    val dateFormat = remember { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()) }
+    
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Refined color indicator
             Box(
                 modifier = Modifier
-                    .size(12.dp)
+                    .size(10.dp)
                     .clip(CircleShape)
-                    .background(Color(note.color))
+                    .background(noteColor)
             )
             
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = note.title.ifBlank { "Untitled" },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = onTogglePin,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (note.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                            contentDescription = "Pin",
+                            modifier = Modifier.size(16.dp),
+                            tint = if (note.isPinned) noteColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                        )
+                    }
+                    if (note.isLocked) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Locked",
+                            modifier = Modifier.size(14.dp),
+                            tint = noteColor
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(2.dp))
+                
                 Text(
-                    text = note.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    text = if (note.isLocked) "Encrypted content" else note.content.ifBlank { "No content" },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (note.isLocked) 0.5f else 1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                Text(
-                    text = note.content,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Spacer(modifier = Modifier.height(6.dp))
                 
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                val dateFormat = SimpleDateFormat("MMM d", Locale.getDefault())
-                Text(
-                    text = dateFormat.format(Date(note.updatedAt)),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = dateFormat.format(Date(note.updatedAt)),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(modifier = Modifier.size(2.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f), CircleShape))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = note.category,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = noteColor,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             
-            if (note.isPinned) {
-                Icon(
-                    imageVector = Icons.Filled.PushPin,
-                    contentDescription = "Pinned",
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+            )
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteEditorSheet(
@@ -393,7 +501,15 @@ fun NoteEditorSheet(
     var content by remember { mutableStateOf(note?.content ?: "") }
     var selectedColor by remember { mutableStateOf(note?.color ?: NoteColors.colors.first()) }
     var tagsText by remember { mutableStateOf(note?.tags?.joinToString(", ") ?: "") }
+    var isLocked by remember { mutableStateOf(note?.isLocked ?: false) }
+    var isPinned by remember { mutableStateOf(note?.isPinned ?: false) }
+    var category by remember { mutableStateOf(note?.category ?: "General") }
+    var mood by remember { mutableStateOf(note?.mood ?: "Neutral") }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
     
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -404,6 +520,7 @@ fun NoteEditorSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             // Header
             Row(
@@ -419,11 +536,14 @@ fun NoteEditorSheet(
                 
                 Row {
                     if (note != null) {
-                        IconButton(onClick = { onTogglePin(note.id) }) {
+                        IconButton(onClick = { 
+                            isPinned = !isPinned
+                            if (note != null) onTogglePin(note.id) 
+                        }) {
                             Icon(
-                                imageVector = if (note.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                                imageVector = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
                                 contentDescription = "Pin",
-                                tint = if (note.isPinned) MaterialTheme.colorScheme.primary 
+                                tint = if (isPinned) MaterialTheme.colorScheme.primary 
                                        else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -441,74 +561,173 @@ fun NoteEditorSheet(
             
             Spacer(modifier = Modifier.height(20.dp))
             
+            // Lock Toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                        contentDescription = null,
+                        tint = if (isLocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Lock Note",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Require PIN to view contents",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Switch(
+                    checked = isLocked,
+                    onCheckedChange = { isLocked = it }
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
             // Title field
-            OutlinedTextField(
+            TextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Title") },
+                placeholder = { Text("Note Title", style = MaterialTheme.typography.headlineSmall.copy(color = onSurfaceVariant.copy(alpha = 0.5f))) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Content field
-            OutlinedTextField(
-                value = content,
-                onValueChange = { content = it },
-                label = { Text("Note content") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Tags field
-            OutlinedTextField(
-                value = tagsText,
-                onValueChange = { tagsText = it },
-                label = { Text("Tags (comma separated)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                placeholder = { Text("e.g., work, important, idea") }
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Color picker
-            Text(
-                text = "Color",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium
+                textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
             )
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            Row(
+            // Category & Mood
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ) {
+                    TextField(
+                        value = category,
+                        onValueChange = { category = it },
+                        placeholder = { Text("Category") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Surface(
+                    modifier = Modifier.weight(0.8f),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ) {
+                    TextField(
+                        value = mood,
+                        onValueChange = { mood = it },
+                        placeholder = { Text("Mood / Emoji") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Content field
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
             ) {
-                NoteColors.colors.forEach { color ->
+                TextField(
+                    value = content,
+                    onValueChange = { content = it },
+                    placeholder = { Text("Start typing your note...") },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    )
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Tags field
+            TextField(
+                value = tagsText,
+                onValueChange = { tagsText = it },
+                label = { Text("Tags") },
+                placeholder = { Text("e.g., work, personal, idea") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = primaryColor,
+                    unfocusedIndicatorColor = primaryColor.copy(alpha = 0.3f)
+                )
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Color picker
+            Text(
+                text = "Canvas Color",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = onSurfaceVariant
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            androidx.compose.foundation.lazy.LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(end = 20.dp)
+            ) {
+                items(NoteColors.allColors) { color ->
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
                             .background(Color(color))
-                            .then(
-                                if (selectedColor == color) {
-                                    Modifier.border(3.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                                } else Modifier
+                            .border(
+                                width = if (selectedColor == color) 3.dp else 1.dp,
+                                color = if (selectedColor == color) primaryColor else Color.Black.copy(alpha = 0.05f),
+                                shape = CircleShape
                             )
                             .clickable { selectedColor = color }
                     )
                 }
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             
             // Save button
             Button(
@@ -519,24 +738,32 @@ fun NoteEditorSheet(
                     
                     onSave(
                         Note(
-                            id = note?.id ?: UUID.randomUUID().toString(),
+                            id = note?.id ?: java.util.UUID.randomUUID().toString(),
                             title = title.ifBlank { "Untitled" },
                             content = content,
                             color = selectedColor,
-                            isPinned = note?.isPinned ?: false,
+                            isPinned = isPinned,
                             tags = tags,
+                            isLocked = isLocked,
+                            category = category.ifBlank { "General" },
+                            mood = mood.ifBlank { "Neutral" },
+                            updatedAt = System.currentTimeMillis(),
                             createdAt = note?.createdAt ?: System.currentTimeMillis()
                         )
                     )
                 },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                enabled = title.isNotBlank() || content.isNotBlank()
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
             ) {
-                Icon(Icons.Filled.Check, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Save Note")
+                Text(
+                    text = if (note != null) "Save Changes" else "Create Note",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
+            
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
     

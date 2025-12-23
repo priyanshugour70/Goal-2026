@@ -17,7 +17,7 @@ data class Task(
     val linkedGoalId: String? = null,
     val linkedNoteId: String? = null,
     val linkedReminderId: String? = null,
-    val category: String = "",
+    val tags: List<String> = emptyList(),
     val repeatType: RepeatType = RepeatType.NONE,
     val reminder: Long? = null,
     val reminderEnabled: Boolean = true,
@@ -28,6 +28,29 @@ data class Task(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
+
+/**
+ * Common Task Tags
+ */
+object TaskTags {
+    const val PERSONAL = "Personal"
+    const val OFFICE = "Office"
+    const val HEALTH = "Health"
+    const val SHOPPING = "Shopping"
+    const val TRAVEL = "Travel"
+    const val OTHER = "Other"
+
+    val ALL = listOf(PERSONAL, OFFICE, HEALTH, SHOPPING, TRAVEL, OTHER)
+    
+    fun getColorForTag(tag: String): Long = when(tag) {
+        PERSONAL -> 0xFF2196F3 // Blue
+        OFFICE -> 0xFFFF9800   // Orange
+        HEALTH -> 0xFF4CAF50   // Green
+        SHOPPING -> 0xFFE91E63 // Pink
+        TRAVEL -> 0xFF9C27B0   // Purple
+        else -> 0xFF607D8B     // Grey
+    }
+}
 
 /**
  * Subtask for breaking down tasks

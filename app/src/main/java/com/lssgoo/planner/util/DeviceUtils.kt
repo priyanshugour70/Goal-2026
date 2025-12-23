@@ -92,6 +92,23 @@ object DeviceUtils {
     }
     
     /**
+     * Get comprehensive device information for sync metadata
+     */
+    fun getDeviceInfo(context: Context): Map<String, String> {
+        val deviceId = getDeviceId(context)
+        return mapOf(
+            "deviceId" to deviceId,
+            "manufacturer" to Build.MANUFACTURER,
+            "model" to Build.MODEL,
+            "brand" to Build.BRAND,
+            "hardware" to Build.HARDWARE,
+            "osVersion" to Build.VERSION.RELEASE,
+            "sdkInt" to Build.VERSION.SDK_INT.toString(),
+            "lastSync" to System.currentTimeMillis().toString()
+        )
+    }
+
+    /**
      * Hash the device ID for privacy (optional)
      */
     fun getHashedDeviceId(context: Context): String {

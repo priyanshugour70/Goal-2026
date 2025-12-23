@@ -49,6 +49,8 @@ object AppIcons {
     val Events = Icons.Default.Event
     val Milestone = Icons.Default.FlagCircle
     val Flag = Icons.Default.Flag
+    val Journal = Icons.Default.HistoryEdu
+    val Habit = Icons.Default.CheckCircle
     
     val Add = Icons.Default.Add
     val Edit = Icons.Default.Edit

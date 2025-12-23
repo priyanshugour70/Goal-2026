@@ -5,8 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.lssgoo.planner.features.tasks.models.CalendarEvent
 import com.lssgoo.planner.features.tasks.models.Task
 import com.lssgoo.planner.features.reminders.models.Reminder
@@ -25,9 +26,7 @@ import java.util.Calendar
 fun CalendarGrid(
     currentMonth: Calendar,
     selectedDate: Long,
-    events: List<CalendarEvent>,
-    tasks: List<Task>,
-    reminders: List<Reminder>,
+    activityCounts: Map<Int, Int>, // New parameter
     onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -53,14 +52,14 @@ fun CalendarGrid(
                     text = day,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
             }
         }
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
         // Calendar days
         val totalCells = firstDayOfWeek + daysInMonth
@@ -87,18 +86,13 @@ fun CalendarGrid(
                         
                         val isSelected = isSameDay(dayTimestamp, selectedDate)
                         val isToday = isCurrentMonth && day == today.get(Calendar.DAY_OF_MONTH)
-                        
-                        val activeEvents = events.any { isSameDay(it.date, dayTimestamp) }
-                        val activeTasks = tasks.any { it.dueDate?.let { d -> isSameDay(d, dayTimestamp) } ?: false }
-                        val activeReminders = reminders.any { isSameDay(it.reminderTime, dayTimestamp) }
+                        val count = activityCounts[day] ?: 0
                         
                         CalendarDay(
                             day = day,
                             isSelected = isSelected,
                             isToday = isToday,
-                            hasEvents = activeEvents,
-                            hasTasks = activeTasks,
-                            hasReminders = activeReminders,
+                            activityCount = count,
                             onClick = { onDateSelected(dayTimestamp) },
                             modifier = Modifier.weight(1f)
                         )
@@ -117,27 +111,28 @@ fun CalendarDay(
     day: Int,
     isSelected: Boolean,
     isToday: Boolean,
-    hasEvents: Boolean,
-    hasTasks: Boolean,
-    hasReminders: Boolean,
+    activityCount: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .padding(4.dp)
-            .clip(CircleShape)
+            .padding(2.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(
                 when {
-                    isSelected -> MaterialTheme.colorScheme.primary
-                    isToday -> MaterialTheme.colorScheme.primaryContainer
+                    isSelected -> colorScheme.primary
+                    isToday -> colorScheme.primaryContainer.copy(alpha = 0.5f)
                     else -> Color.Transparent
                 }
             )
             .then(
                 if (isToday && !isSelected) {
-                    Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                    Modifier.border(1.dp, colorScheme.primary.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                 } else Modifier
             )
             .clickable(onClick = onClick),
@@ -149,42 +144,28 @@ fun CalendarDay(
         ) {
             Text(
                 text = day.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
+                style = typography.bodyLarge,
+                fontWeight = if (isSelected || isToday) FontWeight.ExtraBold else FontWeight.Medium,
                 color = when {
-                    isSelected -> MaterialTheme.colorScheme.onPrimary
-                    else -> MaterialTheme.colorScheme.onSurface
+                    isSelected -> colorScheme.onPrimary
+                    else -> colorScheme.onSurface
                 }
             )
             
-            // Indicator dots
-            if (hasEvents || hasTasks || hasReminders) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+            if (activityCount > 0) {
+                Surface(
+                    shape = CircleShape,
+                    color = if (isSelected) Color.White.copy(alpha = 0.3f) else colorScheme.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(16.dp)
                 ) {
-                    if (hasEvents) {
-                        Box(
-                            modifier = Modifier
-                                .size(4.dp)
-                                .clip(CircleShape)
-                                .background(if (isSelected) Color.White else CalendarColors.task)
-                        )
-                    }
-                    if (hasTasks) {
-                        Box(
-                            modifier = Modifier
-                                .size(4.dp)
-                                .clip(CircleShape)
-                                .background(if (isSelected) Color.White else CalendarColors.event)
-                        )
-                    }
-                    if (hasReminders) {
-                        Box(
-                            modifier = Modifier
-                                .size(4.dp)
-                                .clip(CircleShape)
-                                .background(if (isSelected) Color.White else CalendarColors.reminder)
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = activityCount.toString(),
+                            style = typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = if (isSelected) Color.White else colorScheme.primary
                         )
                     }
                 }

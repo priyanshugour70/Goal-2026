@@ -17,6 +17,8 @@ import com.lssgoo.planner.MainActivity
 import com.lssgoo.planner.R
 import com.lssgoo.planner.features.dashboard.models.MotivationalThoughts
 import com.lssgoo.planner.features.dashboard.models.NotificationContext
+import com.lssgoo.planner.data.local.LocalStorageManager
+import kotlinx.coroutines.*
 import java.util.*
 
 /**
@@ -392,11 +394,39 @@ class NotificationReceiver : BroadcastReceiver() {
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            // Reschedule all notifications
-            val notificationManager = PlannerNotificationManager(context)
-            notificationManager.scheduleDailyMotivation()
-            notificationManager.schedulePeriodicReminders()
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED || 
+            intent.action == "android.intent.action.QUICKBOOT_POWERON") {
+            
+            // Go Async to load data from DB
+            val pendingResult = goAsync()
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Reschedule standard notifications
+                    val notificationManager = PlannerNotificationManager(context)
+                    notificationManager.scheduleDailyMotivation()
+                    notificationManager.schedulePeriodicReminders()
+                    
+                    // Reschedule specific reminders from DB
+                    val storage = LocalStorageManager(context)
+                    val reminders = storage.getReminders().filter { it.isEnabled && !it.isCompleted }
+                    
+                    reminders.forEach { reminder ->
+                        if (reminder.reminderTime > System.currentTimeMillis()) {
+                            notificationManager.scheduleReminder(
+                                notificationId = reminder.notificationId,
+                                title = reminder.title,
+                                message = reminder.description.ifBlank { "Reminder" },
+                                triggerTime = reminder.reminderTime,
+                                itemId = reminder.id
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    pendingResult.finish()
+                }
+            }
         }
     }
 }

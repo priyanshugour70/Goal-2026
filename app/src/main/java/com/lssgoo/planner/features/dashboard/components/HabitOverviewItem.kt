@@ -26,8 +26,8 @@ fun HabitOverviewItem(habit: Habit) {
             modifier = Modifier
                 .size(50.dp)
                 .clip(CircleShape)
-                .background(Color(habit.color).copy(alpha = 0.15f))
-                .border(1.dp, Color(habit.color).copy(alpha = 0.3f), CircleShape),
+                .background(Color(habit.iconColor).copy(alpha = 0.15f))
+                .border(1.dp, Color(habit.iconColor).copy(alpha = 0.3f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text(habit.icon, fontSize = 20.sp)

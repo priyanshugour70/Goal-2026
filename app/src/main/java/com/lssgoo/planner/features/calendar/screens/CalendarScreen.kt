@@ -39,6 +39,11 @@ fun CalendarScreen(
         viewModel.getAllItemsForDate(selectedDate)
     }
     
+    // Monthly activity counts for indicators
+    val activityCounts = remember(currentMonth, itemsTrigger) {
+        viewModel.getMonthActivityCounts(currentMonth)
+    }
+    
     val monthFormat = remember { SimpleDateFormat("MMMM yyyy", Locale.getDefault()) }
     
     Scaffold(
@@ -112,9 +117,7 @@ fun CalendarScreen(
                 CalendarGrid(
                     currentMonth = currentMonth,
                     selectedDate = selectedDate,
-                    events = events,
-                    tasks = tasks,
-                    reminders = reminders,
+                    activityCounts = activityCounts,
                     onDateSelected = { viewModel.setSelectedDate(it) },
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )

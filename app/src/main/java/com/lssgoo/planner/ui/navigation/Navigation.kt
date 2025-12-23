@@ -22,6 +22,7 @@ object Routes {
     const val BACKUP = "backup"
     const val ONBOARDING = "onboarding"
     const val PROFILE = "profile"
+    const val APPLOCK = "app_lock"
     
     // New Feature Routes
     const val HABITS = "habits"
@@ -31,6 +32,12 @@ object Routes {
     const val JOURNAL = "journal"
     const val JOURNAL_ENTRY = "journal/{entryId}"
     const val FINANCE = "finance"
+    
+    // Settings Sub-pages
+    const val ABOUT_DEVELOPER = "about_developer"
+    const val VERSION_HISTORY = "version_history"
+    const val PRIVACY_POLICY = "privacy_policy"
+    const val TERMS_OF_SERVICE = "terms_of_service"
     
     fun goalDetail(goalId: String) = "goal/$goalId"
     fun noteDetail(noteId: String) = "note/$noteId"

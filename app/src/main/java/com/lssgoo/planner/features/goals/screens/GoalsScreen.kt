@@ -1,8 +1,14 @@
 package com.lssgoo.planner.features.goals.screens
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,11 +32,20 @@ fun GoalsScreen(
 ) {
     val goals by viewModel.goals.collectAsState()
     var selectedCategory by remember { mutableStateOf<GoalCategory?>(null) }
+    var showAddGoalDialog by remember { mutableStateOf(false) }
+    var sortByDate by remember { mutableStateOf(false) }
     
-    val filteredGoals = if (selectedCategory != null) {
-        goals.filter { it.category == selectedCategory }
-    } else {
-        goals
+    val filteredGoals = remember(goals, selectedCategory, sortByDate) {
+        var result = if (selectedCategory != null) {
+            goals.filter { it.category == selectedCategory }
+        } else {
+            goals
+        }
+        
+        if (sortByDate) {
+            result = result.sortedBy { it.targetDate ?: Long.MAX_VALUE }
+        }
+        result
     }
     
     val overallProgress = if (goals.isNotEmpty()) goals.sumOf { it.progress.toDouble() }.toFloat() / goals.size else 0f
@@ -47,22 +62,46 @@ fun GoalsScreen(
                         .statusBarsPadding()
                         .padding(horizontal = 20.dp, vertical = 4.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            AppIcons.Goal,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Goals",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                AppIcons.Goal,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Goals",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        IconButton(onClick = { sortByDate = !sortByDate }) {
+                            Icon(
+                                imageVector = if (sortByDate) Icons.Default.SortByAlpha else Icons.Default.CalendarToday,
+                                contentDescription = "Sort",
+                                tint = if (sortByDate) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showAddGoalDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp),
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("New Goal", fontWeight = FontWeight.Bold) }
+            )
         },
         modifier = modifier
     ) { paddingValues ->
@@ -93,9 +132,23 @@ fun GoalsScreen(
                 GoalCard(
                     goal = goal,
                     onClick = { onGoalClick(goal.id) },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = null,
+                        fadeOutSpec = null,
+                        placementSpec = spring(stiffness = Spring.StiffnessLow)
+                    ).padding(horizontal = 16.dp, vertical = 6.dp)
                 )
             }
         }
+    }
+
+    if (showAddGoalDialog) {
+        AddEditGoalDialog(
+            onDismiss = { showAddGoalDialog = false },
+            onConfirm = { 
+                viewModel.addGoal(it) 
+                showAddGoalDialog = false
+            }
+        )
     }
 }

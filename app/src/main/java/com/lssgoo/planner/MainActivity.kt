@@ -82,11 +82,11 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
         window.statusBarColor = statusBarColor.toArgb()
     }
     
+    
+    val settings by rootViewModel.settings.collectAsState()
+    
     if (!isOnboardingComplete) {
-        OnboardingScreen(onComplete = { profile ->
-            rootViewModel.saveUserProfile(profile)
-            rootViewModel.setOnboardingComplete(true)
-        })
+        OnboardingScreen(viewModel = rootViewModel)
     } else {
         val showBottomBar = currentRoute in BottomNavDestination.entries.map { it.route }
         
@@ -187,7 +187,19 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
                 }
 
                 composable(Routes.SETTINGS) {
-                    SettingsScreen(viewModel = rootViewModel, onBack = { navController.popBackStack() })
+                    SettingsScreen(
+                        viewModel = rootViewModel,
+                        onBack = { navController.popBackStack() },
+                        onNavigateToPin = { navController.navigate(Routes.APPLOCK) },
+                        onNavigate = { navController.navigate(it) }
+                    )
+                }
+                
+                composable(Routes.APPLOCK) {
+                    com.lssgoo.planner.features.settings.screens.PinLockScreen(
+                        viewModel = rootViewModel,
+                        onUnlockSuccess = { navController.popBackStack() }
+                    )
                 }
                 
                 composable(Routes.HABITS) {
@@ -200,6 +212,22 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
                 
                 composable(Routes.ANALYTICS) {
                     AnalyticsScreen(viewModel = rootViewModel)
+                }
+
+                composable(Routes.ABOUT_DEVELOPER) {
+                    com.lssgoo.planner.features.settings.screens.AboutDeveloperScreen(onBack = { navController.popBackStack() })
+                }
+
+                composable(Routes.VERSION_HISTORY) {
+                    com.lssgoo.planner.features.settings.screens.VersionHistoryScreen(onBack = { navController.popBackStack() })
+                }
+
+                composable(Routes.PRIVACY_POLICY) {
+                    com.lssgoo.planner.features.settings.screens.PrivacyPolicyScreen(onBack = { navController.popBackStack() })
+                }
+
+                composable(Routes.TERMS_OF_SERVICE) {
+                    com.lssgoo.planner.features.settings.screens.TermsOfServiceScreen(onBack = { navController.popBackStack() })
                 }
             }
         }

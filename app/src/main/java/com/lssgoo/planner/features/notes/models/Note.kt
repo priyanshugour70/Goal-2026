@@ -24,6 +24,10 @@ data class Note(
     val reminderRepeatType: RepeatType = RepeatType.NONE,
     val isReminderEnabled: Boolean = true,
     val notificationId: Int = (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
+    val isLocked: Boolean = false,
+    val category: String = "General",
+    val mood: String = "Neutral",
+    val lastEditedBy: String = "User",
     // Recall features
     val recallIntervals: List<Long> = emptyList(), // Spaced repetition intervals
     val nextRecallDate: Long? = null,
@@ -49,28 +53,27 @@ data class NoteUpdateRecord(
  */
 object NoteColors {
     val colors = listOf(
-        0xFFFFFFFF, // White
-        0xFFFFF9C4, // Light Yellow
-        0xFFFFCCBC, // Light Orange
-        0xFFE1BEE7, // Light Purple
-        0xFFB3E5FC, // Light Blue
-        0xFFC8E6C9, // Light Green
-        0xFFFFE0B2, // Peach
-        0xFFF8BBD0, // Light Pink
-        0xFFD7CCC8, // Light Brown
-        0xFFCFD8DC  // Blue Grey
+        0xFF4DD0E1, // Sparkle Blue
+        0xFF81C784, // Sage Green
+        0xFFFFD54F, // Vivid Amber
+        0xFFFF8A65, // Coral Orange
+        0xFFBA68C8, // Soft Amethyst
+        0xFFF06292, // Rosy Pink
+        0xFF4DB6AC, // Teal Mint
+        0xFFAED581, // Lime Leaf
+        0xFF7986CB, // Indigo Night
+        0xFF90A4AE  // Steel Blue
     )
     
-    // Additional premium colors
     val premiumColors = listOf(
-        0xFFE8F5E9, // Mint
-        0xFFFCE4EC, // Rose
-        0xFFF3E5F5, // Lavender
-        0xFFE0F7FA, // Cyan Light
-        0xFFFFF3E0, // Amber Light
-        0xFFEDE7F6, // Deep Purple Light
-        0xFFE1F5FE, // Light Blue 50
-        0xFFFBE9E7  // Deep Orange Light
+        0xFFE57373, // Soft Red
+        0xFFFFB74D, // Honey Orange
+        0xFFFFF176, // Lemon Yellow
+        0xFF64B5F6, // Sky Blue
+        0xFF4FC3F7, // Ocean Cyan
+        0xFF9575CD, // Deep Lavender
+        0xFFD4E157, // Pear Green
+        0xFFFF80AB  // Flamingo Pink
     )
     
     val allColors = colors + premiumColors

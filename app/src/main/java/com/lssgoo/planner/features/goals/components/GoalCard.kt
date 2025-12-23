@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import com.lssgoo.planner.data.model.Goal
 import com.lssgoo.planner.ui.components.AnimatedProgressBar
 import com.lssgoo.planner.ui.components.getIcon
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Goal card with gradient background - Feature-specific component for Goals
@@ -131,11 +135,25 @@ fun GoalCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "$completedMilestones / $totalMilestones milestones",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (goal.targetDate != null) Icons.Default.Event else Icons.Default.Flag,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (goal.targetDate != null) {
+                            val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+                            dateFormat.format(java.util.Date(goal.targetDate))
+                        } else {
+                            "$completedMilestones / $totalMilestones"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Text(
                     text = "${(progress * 100).toInt()}%",
                     style = MaterialTheme.typography.labelMedium,

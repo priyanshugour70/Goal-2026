@@ -141,6 +141,13 @@ fun DashboardScreen(
         }
         
         item { Spacer(modifier = Modifier.height(16.dp)) }
+
+        // Day Summary Card
+        item {
+             DaySummaryCard(stats = stats, modifier = Modifier.padding(horizontal = 16.dp))
+        }
+        
+        item { Spacer(modifier = Modifier.height(16.dp)) }
         
         // Quick Stats Row
         item {
@@ -368,6 +375,56 @@ fun DashboardScreen(
         // Year Progress
         item {
             YearProgressCard(modifier = Modifier.padding(horizontal = 16.dp))
+        }
+    }
+}
+
+@Composable
+fun DaySummaryCard(
+    stats: com.lssgoo.planner.features.settings.models.DashboardStats,
+    modifier: Modifier = Modifier
+) {
+    val tasksLeft = stats.totalTasksToday - stats.tasksCompletedToday
+    val habitsLeft = stats.totalHabitsToday - stats.habitsCompletedToday
+    
+    val message = when {
+        tasksLeft <= 0 && habitsLeft <= 0 -> "You're all set for today! \uD83C\uDF89"
+        tasksLeft <= 0 -> "Great job! Just $habitsLeft habits remaining."
+        habitsLeft <= 0 -> "Habits done! Focus on your $tasksLeft tasks."
+        else -> "Good Morning! You have $tasksLeft tasks and $habitsLeft habits left."
+    }
+    
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.WbSunny,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = "Daily Summary",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
     }
 }

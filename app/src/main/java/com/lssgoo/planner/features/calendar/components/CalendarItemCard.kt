@@ -30,6 +30,10 @@ fun CalendarItemCard(
         CalendarItemType.REMINDER -> AppIcons.Reminders
         CalendarItemType.NOTE -> AppIcons.Notes
         CalendarItemType.GOAL_MILESTONE -> AppIcons.Milestone
+        CalendarItemType.FINANCE -> AppIcons.Finance
+        CalendarItemType.HABIT -> AppIcons.Habit
+        CalendarItemType.JOURNAL -> AppIcons.Journal
+        CalendarItemType.GOAL -> AppIcons.Trophy
     }
     
     val color = Color(item.color)

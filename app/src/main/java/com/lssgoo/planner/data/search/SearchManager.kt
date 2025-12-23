@@ -1,6 +1,7 @@
 package com.lssgoo.planner.data.search
 
 import com.lssgoo.planner.data.model.*
+import com.lssgoo.planner.features.habits.models.*
 import com.lssgoo.planner.ui.components.getIcon
 import com.lssgoo.planner.features.reminders.models.ItemPriority
 

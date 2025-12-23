@@ -25,6 +25,10 @@ class GoalRepository(private val storage: LocalStorageManager) {
         return storage.getGoals().find { it.id == id }
     }
 
+    fun saveGoals(goals: List<Goal>) {
+        storage.saveGoals(goals)
+    }
+
     fun saveGoal(goal: Goal) {
         val goals = storage.getGoals().toMutableList()
         val index = goals.indexOfFirst { it.id == goal.id }
@@ -43,6 +47,31 @@ class GoalRepository(private val storage: LocalStorageManager) {
     fun deleteGoal(goalId: String) {
         val goals = storage.getGoals().filter { it.id != goalId }
         storage.saveGoals(goals)
+    }
+
+    fun updateMilestone(goalId: String, updatedMilestone: com.lssgoo.planner.features.goals.models.Milestone) {
+        val goals = storage.getGoals().toMutableList()
+        val goalIndex = goals.indexOfFirst { it.id == goalId }
+        
+        if (goalIndex != -1) {
+            val goal = goals[goalIndex]
+            val updatedMilestones = goal.milestones.map { milestone ->
+                if (milestone.id == updatedMilestone.id) {
+                    updatedMilestone
+                } else milestone
+            }
+            
+            val total = updatedMilestones.size
+            val completed = updatedMilestones.count { it.isCompleted }
+            val progress = if (total > 0) completed.toFloat() / total else 0f
+            
+            goals[goalIndex] = goal.copy(
+                milestones = updatedMilestones,
+                progress = progress,
+                updatedAt = System.currentTimeMillis()
+            )
+            storage.saveGoals(goals)
+        }
     }
 
     fun toggleMilestone(goalId: String, milestoneId: String) {
@@ -73,5 +102,9 @@ class GoalRepository(private val storage: LocalStorageManager) {
             
             storage.saveGoals(goals)
         }
+    }
+
+    fun getGoalsSortedByDate(): List<Goal> {
+        return getGoals().sortedBy { it.targetDate ?: Long.MAX_VALUE }
     }
 }

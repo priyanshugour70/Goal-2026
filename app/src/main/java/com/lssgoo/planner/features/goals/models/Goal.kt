@@ -15,6 +15,7 @@ data class Goal(
     val color: Long,
     val progress: Float = 0f, // 0.0 to 1.0
     val milestones: List<Milestone> = emptyList(),
+    val targetDate: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
@@ -22,9 +23,19 @@ data class Goal(
 data class Milestone(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
+    val description: String? = null,
     val isCompleted: Boolean = false,
-    val completedAt: Long? = null
+    val completedAt: Long? = null,
+    val targetDate: Long? = null,
+    val quality: MilestoneQuality? = null,
+    val rating: Int? = null // 1-5 stars
 )
+
+enum class MilestoneQuality(val displayName: String, val color: Long) {
+    HIGH("Full Perfection", 0xFF4CAF50),
+    MID("Medium Quality", 0xFFFF9800),
+    LOW("Low Effort", 0xFFF44336)
+}
 
 enum class GoalCategory(val displayName: String, val emoji: String, val iconName: String) {
     HEALTH("Health & Fitness", "💪", "FitnessCenter"),
