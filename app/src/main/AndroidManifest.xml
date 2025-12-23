@@ -23,13 +23,13 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Goal2026">
+        android:theme="@style/Theme.Planner">
         
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Goal2026"
+            android:theme="@style/Theme.Planner"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -43,10 +43,10 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.lssgoo.goal2026.TASK_REMINDER" />
-                <action android:name="com.lssgoo.goal2026.DAILY_MOTIVATION" />
-                <action android:name="com.lssgoo.goal2026.DEADLINE_WARNING" />
-                <action android:name="com.lssgoo.goal2026.CUSTOM_REMINDER" />
+                <action android:name="com.lssgoo.planner.TASK_REMINDER" />
+                <action android:name="com.lssgoo.planner.DAILY_MOTIVATION" />
+                <action android:name="com.lssgoo.planner.DEADLINE_WARNING" />
+                <action android:name="com.lssgoo.planner.CUSTOM_REMINDER" />
             </intent-filter>
         </receiver>
         

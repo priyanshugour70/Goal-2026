@@ -7,7 +7,7 @@ plugins {
 import java.util.Properties
 
 android {
-    namespace = "com.lssgoo.goal2026"
+    namespace = "com.lssgoo.planner"
     compileSdk {
         version = release(36)
     }
@@ -34,7 +34,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.lssgoo.goal2026"
+        applicationId = "com.lssgoo.planner"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
