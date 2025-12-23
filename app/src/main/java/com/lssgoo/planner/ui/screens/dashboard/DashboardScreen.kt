@@ -726,7 +726,7 @@ fun YearProgressCard(modifier: Modifier = Modifier) {
     val daysRemaining = totalDays - dayOfYear
     
     val year = calendar.get(Calendar.YEAR)
-    val is2026 = year == 2026
+    val isCurrentYear = true // Simply show Year Progress for any year we are in
     
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -746,7 +746,7 @@ fun YearProgressCard(modifier: Modifier = Modifier) {
             ) {
                 Column {
                     Text(
-                        text = if (is2026) "Year Progress" else "Year ${year} Progress",
+                        text = "Year Progress",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
