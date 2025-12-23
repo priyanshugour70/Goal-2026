@@ -60,6 +60,40 @@ val errorLight = Color(0xFFD32F2F)
 val successLight = Color(0xFF388E3C)
 val warningLight = Color(0xFFF57C00)
 
+// --- NEW THEME COLORS ---
+
+// OCEAN THEME (Deep Blues & Teals)
+val oceanPrimary = Color(0xFF006064)
+val oceanSecondary = Color(0xFF00838F)
+val oceanTertiary = Color(0xFF0097A7)
+val oceanBackground = Color(0xFFE0F7FA)
+val oceanSurface = Color(0xFFB2EBF2)
+val oceanOnSurface = Color(0xFF004D40)
+
+// SUNSET THEME (Warm Pinks & Oranges)
+val sunsetPrimary = Color(0xFFE91E63)
+val sunsetSecondary = Color(0xFFFF5722)
+val sunsetTertiary = Color(0xFFFF9800)
+val sunsetBackground = Color(0xFFFFF3E0)
+val sunsetSurface = Color(0xFFFFE0B2)
+val sunsetOnSurface = Color(0xFF880E4F)
+
+// FOREST THEME (Natural Greens)
+val forestPrimary = Color(0xFF2E7D32)
+val forestSecondary = Color(0xFF558B2F)
+val forestTertiary = Color(0xFF827717)
+val forestBackground = Color(0xFFF1F8E9)
+val forestSurface = Color(0xFFDCEDC8)
+val forestOnSurface = Color(0xFF1B5E20)
+
+// MIDNIGHT THEME (Deep Purple & AMOLED Black)
+val midnightPrimary = Color(0xFF7E57C2)
+val midnightSecondary = Color(0xFF5E35B1)
+val midnightTertiary = Color(0xFF4527A0)
+val midnightBackground = Color(0xFF000000)
+val midnightSurface = Color(0xFF121212)
+val midnightOnSurface = Color(0xFFEDE7F6)
+
 // Goal Category Colors - Black, White, Light Blue variants
 object GoalColors {
     val health = Color(0xFF26C6DA)  // Light Blue Cyan

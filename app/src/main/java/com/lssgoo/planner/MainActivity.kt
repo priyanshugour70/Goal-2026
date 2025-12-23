@@ -19,6 +19,9 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlin.math.abs
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -142,11 +144,58 @@ fun PlannerApp() {
             },
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { paddingValues ->
-            NavHost(
-                navController = navController,
-                startDestination = Routes.DASHBOARD,
-                modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+            var totalDragX by remember { mutableFloatStateOf(0f) }
+            val swipeThreshold = 100f // Threshold for swipe detection
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = paddingValues.calculateBottomPadding())
+                    .pointerInput(currentRoute) {
+                        // Only enable swipe for bottom nav destinations
+                        val isBottomDest = currentRoute in BottomNavDestination.entries.map { it.route }
+                        if (!isBottomDest) return@pointerInput
+                        
+                        detectHorizontalDragGestures(
+                            onDragEnd = {
+                                if (abs(totalDragX) > swipeThreshold) {
+                                    val destinations = BottomNavDestination.entries
+                                    val currentIndex = destinations.indexOfFirst { it.route == currentRoute }
+                                    
+                                    if (currentIndex != -1) {
+                                        if (totalDragX < 0) { // Swipe Left -> Go Right
+                                            if (currentIndex < destinations.size - 1) {
+                                                navController.navigate(destinations[currentIndex + 1].route) {
+                                                    popUpTo(Routes.DASHBOARD) { saveState = true }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        } else { // Swipe Right -> Go Left
+                                            if (currentIndex > 0) {
+                                                navController.navigate(destinations[currentIndex - 1].route) {
+                                                    popUpTo(Routes.DASHBOARD) { saveState = true }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                totalDragX = 0f
+                            },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                totalDragX += dragAmount
+                            }
+                        )
+                    }
             ) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.DASHBOARD,
+                    modifier = Modifier.fillMaxSize()
+                ) {
                 // Dashboard
                 composable(Routes.DASHBOARD) {
                     DashboardScreen(
@@ -282,6 +331,7 @@ fun PlannerApp() {
             }
         }
     }
+    }
 }
 
 
@@ -386,7 +436,7 @@ fun DynamicBottomNavBar(
                     }
                     
                     // Settings button
-                    DynamicNavItem(
+                    DynamicNavItemBase(
                         icon = AppIcons.SettingsOutlined,
                         selectedIcon = AppIcons.Settings,
                         label = "Settings",
@@ -458,7 +508,7 @@ fun DynamicNavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    DynamicNavItem(
+    DynamicNavItemBase(
         icon = destination.unselectedIcon,
         selectedIcon = destination.selectedIcon,
         label = destination.label,
@@ -470,7 +520,7 @@ fun DynamicNavItem(
 }
 
 @Composable
-fun DynamicNavItem(
+fun DynamicNavItemBase(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     selectedIcon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
@@ -583,7 +633,7 @@ fun CustomBottomNavBar(
                 }
                 
                 // Settings button
-                NavItem(
+                NavItemBase(
                     icon = Icons.Outlined.Settings,
                     selectedIcon = Icons.Filled.Settings,
                     label = "Settings",
@@ -606,7 +656,7 @@ fun NavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    NavItem(
+    NavItemBase(
         icon = destination.unselectedIcon,
         selectedIcon = destination.selectedIcon,
         label = destination.label,
@@ -617,7 +667,7 @@ fun NavItem(
 }
 
 @Composable
-fun NavItem(
+fun NavItemBase(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     selectedIcon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,

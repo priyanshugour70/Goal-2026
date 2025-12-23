@@ -28,7 +28,11 @@ data class AppData(
 enum class ThemeMode(val value: String) {
     LIGHT("LIGHT"),
     DARK("DARK"),
-    SYSTEM("SYSTEM");
+    SYSTEM("SYSTEM"),
+    OCEAN("OCEAN"),
+    SUNSET("SUNSET"),
+    FOREST("FOREST"),
+    MIDNIGHT("MIDNIGHT");
     
     companion object {
         fun fromString(value: String?): ThemeMode {
@@ -36,6 +40,10 @@ enum class ThemeMode(val value: String) {
                 "LIGHT" -> LIGHT
                 "DARK" -> DARK
                 "SYSTEM" -> SYSTEM
+                "OCEAN" -> OCEAN
+                "SUNSET" -> SUNSET
+                "FOREST" -> FOREST
+                "MIDNIGHT" -> MIDNIGHT
                 else -> SYSTEM // Default to SYSTEM
             }
         }

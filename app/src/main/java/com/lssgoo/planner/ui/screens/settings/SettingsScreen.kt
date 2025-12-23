@@ -173,9 +173,13 @@ fun SettingsScreen(
                                else Icons.Filled.BrightnessAuto,
                         title = "Theme",
                         subtitle = when (settings.themeMode) {
-                            ThemeMode.LIGHT -> "Light"
-                            ThemeMode.DARK -> "Dark"
+                            ThemeMode.LIGHT -> "Classic Light"
+                            ThemeMode.DARK -> "Classic Dark"
                             ThemeMode.SYSTEM -> "System Default"
+                            ThemeMode.OCEAN -> "Deep Ocean"
+                            ThemeMode.SUNSET -> "Sunset Glow"
+                            ThemeMode.FOREST -> "Forest Green"
+                            ThemeMode.MIDNIGHT -> "Midnight Purple"
                         },
                         onClick = { showThemeDialog = true },
                         iconColor = MaterialTheme.colorScheme.primary
@@ -193,38 +197,96 @@ fun SettingsScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         },
-                        title = { Text("Choose Theme") },
+                        title = { Text("Choose Your Vibe") },
                         text = {
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            LazyColumn(
+                                modifier = Modifier.heightIn(max = 400.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                ThemeOption(
-                                    icon = Icons.Filled.LightMode,
-                                    title = "Light",
-                                    isSelected = settings.themeMode == ThemeMode.LIGHT,
-                                    onClick = {
-                                        viewModel.updateSettings(settings.copy(themeMode = ThemeMode.LIGHT))
-                                        showThemeDialog = false
-                                    }
-                                )
-                                ThemeOption(
-                                    icon = Icons.Filled.DarkMode,
-                                    title = "Dark",
-                                    isSelected = settings.themeMode == ThemeMode.DARK,
-                                    onClick = {
-                                        viewModel.updateSettings(settings.copy(themeMode = ThemeMode.DARK))
-                                        showThemeDialog = false
-                                    }
-                                )
-                                ThemeOption(
-                                    icon = Icons.Filled.BrightnessAuto,
-                                    title = "System Default",
-                                    isSelected = settings.themeMode == ThemeMode.SYSTEM,
-                                    onClick = {
-                                        viewModel.updateSettings(settings.copy(themeMode = ThemeMode.SYSTEM))
-                                        showThemeDialog = false
-                                    }
-                                )
+                                item {
+                                    ThemeOption(
+                                        icon = Icons.Filled.BrightnessAuto,
+                                        title = "System Default",
+                                        isSelected = settings.themeMode == ThemeMode.SYSTEM,
+                                        colorPreview = MaterialTheme.colorScheme.outline,
+                                        onClick = {
+                                            viewModel.updateSettings(settings.copy(themeMode = ThemeMode.SYSTEM))
+                                            showThemeDialog = false
+                                        }
+                                    )
+                                }
+                                item {
+                                    ThemeOption(
+                                        icon = Icons.Filled.LightMode,
+                                        title = "Classic Light",
+                                        isSelected = settings.themeMode == ThemeMode.LIGHT,
+                                        colorPreview = Color.White,
+                                        onClick = {
+                                            viewModel.updateSettings(settings.copy(themeMode = ThemeMode.LIGHT))
+                                            showThemeDialog = false
+                                        }
+                                    )
+                                }
+                                item {
+                                    ThemeOption(
+                                        icon = Icons.Filled.DarkMode,
+                                        title = "Classic Dark",
+                                        isSelected = settings.themeMode == ThemeMode.DARK,
+                                        colorPreview = Color.Black,
+                                        onClick = {
+                                            viewModel.updateSettings(settings.copy(themeMode = ThemeMode.DARK))
+                                            showThemeDialog = false
+                                        }
+                                    )
+                                }
+                                item {
+                                    ThemeOption(
+                                        icon = Icons.Filled.WaterDrop,
+                                        title = "Deep Ocean",
+                                        isSelected = settings.themeMode == ThemeMode.OCEAN,
+                                        colorPreview = Color(0xFF006064),
+                                        onClick = {
+                                            viewModel.updateSettings(settings.copy(themeMode = ThemeMode.OCEAN))
+                                            showThemeDialog = false
+                                        }
+                                    )
+                                }
+                                item {
+                                    ThemeOption(
+                                        icon = Icons.Filled.WbSunny,
+                                        title = "Sunset Glow",
+                                        isSelected = settings.themeMode == ThemeMode.SUNSET,
+                                        colorPreview = Color(0xFFE91E63),
+                                        onClick = {
+                                            viewModel.updateSettings(settings.copy(themeMode = ThemeMode.SUNSET))
+                                            showThemeDialog = false
+                                        }
+                                    )
+                                }
+                                item {
+                                    ThemeOption(
+                                        icon = Icons.Filled.Park,
+                                        title = "Forest Green",
+                                        isSelected = settings.themeMode == ThemeMode.FOREST,
+                                        colorPreview = Color(0xFF2E7D32),
+                                        onClick = {
+                                            viewModel.updateSettings(settings.copy(themeMode = ThemeMode.FOREST))
+                                            showThemeDialog = false
+                                        }
+                                    )
+                                }
+                                item {
+                                    ThemeOption(
+                                        icon = Icons.Filled.NightsStay,
+                                        title = "Midnight Purple",
+                                        isSelected = settings.themeMode == ThemeMode.MIDNIGHT,
+                                        colorPreview = Color(0xFF7E57C2),
+                                        onClick = {
+                                            viewModel.updateSettings(settings.copy(themeMode = ThemeMode.MIDNIGHT))
+                                            showThemeDialog = false
+                                        }
+                                    )
+                                }
                             }
                         },
                         confirmButton = {
@@ -790,36 +852,66 @@ fun ThemeOption(
     icon: ImageVector,
     title: String,
     isSelected: Boolean,
+    colorPreview: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(12.dp),
+            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else Color.Transparent)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (isSelected) MaterialTheme.colorScheme.primary 
-                  else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
+        // Theme Icon
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        
         Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isSelected) MaterialTheme.colorScheme.primary 
-                   else MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.weight(1f))
+        
+        // Title and Preview
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(colorPreview)
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), CircleShape)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = if (isSelected) "Active" else "Preview",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
         if (isSelected) {
             Icon(
                 Icons.Filled.CheckCircle,
-                contentDescription = null,
+                contentDescription = "Selected",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )

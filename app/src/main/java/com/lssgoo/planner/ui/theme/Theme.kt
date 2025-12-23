@@ -63,31 +63,79 @@ private val LightColorScheme = lightColorScheme(
     onError = Color.White
 )
 
+private val OceanColorScheme = lightColorScheme(
+    primary = oceanPrimary,
+    onPrimary = Color.White,
+    secondary = oceanSecondary,
+    tertiary = oceanTertiary,
+    background = oceanBackground,
+    surface = oceanSurface,
+    onSurface = oceanOnSurface
+)
+
+private val SunsetColorScheme = lightColorScheme(
+    primary = sunsetPrimary,
+    onPrimary = Color.White,
+    secondary = sunsetSecondary,
+    tertiary = sunsetTertiary,
+    background = sunsetBackground,
+    surface = sunsetSurface,
+    onSurface = sunsetOnSurface
+)
+
+private val ForestColorScheme = lightColorScheme(
+    primary = forestPrimary,
+    onPrimary = Color.White,
+    secondary = forestSecondary,
+    tertiary = forestTertiary,
+    background = forestBackground,
+    surface = forestSurface,
+    onSurface = forestOnSurface
+)
+
+private val MidnightColorScheme = darkColorScheme(
+    primary = midnightPrimary,
+    onPrimary = Color.White,
+    secondary = midnightSecondary,
+    tertiary = midnightTertiary,
+    background = midnightBackground,
+    surface = midnightSurface,
+    onSurface = midnightOnSurface
+)
+
 @Composable
 fun PlannerTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     content: @Composable () -> Unit
 ) {
     val systemDarkTheme = isSystemInDarkTheme()
-    val darkTheme = when (themeMode) {
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-        ThemeMode.SYSTEM -> systemDarkTheme
+    val colorScheme = when (themeMode) {
+        ThemeMode.LIGHT -> LightColorScheme
+        ThemeMode.DARK -> DarkColorScheme
+        ThemeMode.OCEAN -> OceanColorScheme
+        ThemeMode.SUNSET -> SunsetColorScheme
+        ThemeMode.FOREST -> ForestColorScheme
+        ThemeMode.MIDNIGHT -> MidnightColorScheme
+        ThemeMode.SYSTEM -> if (systemDarkTheme) DarkColorScheme else LightColorScheme
     }
     
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val isDark = when (themeMode) {
+        ThemeMode.DARK, ThemeMode.MIDNIGHT -> true
+        ThemeMode.LIGHT, ThemeMode.OCEAN, ThemeMode.SUNSET, ThemeMode.FOREST -> false
+        ThemeMode.SYSTEM -> systemDarkTheme
+    }
     
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Set status bar and navigation bar to match theme
-            val statusBarColor = if (darkTheme) Color.Black else Color.White
-            window.statusBarColor = statusBarColor.toArgb()
-            window.navigationBarColor = statusBarColor.toArgb()
-            // Light icons for dark theme (black bg), dark icons for light theme (white bg)
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
+            // Set status bar and navigation bar to match theme colors
+            window.statusBarColor = colorScheme.background.toArgb()
+            window.navigationBarColor = colorScheme.background.toArgb()
+            // Light icons for dark theme, dark icons for light theme
+            val isLightStatusBar = !isDark
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = isLightStatusBar
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = isLightStatusBar
         }
     }
 
