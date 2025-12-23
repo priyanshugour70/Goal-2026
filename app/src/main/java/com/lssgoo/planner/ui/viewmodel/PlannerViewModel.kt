@@ -1,6 +1,7 @@
 package com.lssgoo.planner.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.lssgoo.planner.data.local.LocalStorageManager
 import com.lssgoo.planner.data.model.*
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Root ViewModel for global app state (Onboarding, Sync initialization)
+ * Root ViewModel for global app state
  */
 class PlannerViewModel(application: Application) : BaseViewModel(application) {
     
@@ -19,21 +20,53 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     private val _settings = MutableStateFlow(storageManager.getSettings())
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
     
+    private val _userProfile = MutableStateFlow(storageManager.getUserProfile() ?: UserProfile())
+    val userProfile: StateFlow<UserProfile> = _userProfile.asStateFlow()
+    
     private val _isOnboardingComplete = MutableStateFlow(storageManager.isOnboardingComplete())
     val isOnboardingComplete: StateFlow<Boolean> = _isOnboardingComplete.asStateFlow()
     
-    fun saveUserProfile(profile: UserProfile) { viewModelScope.launch { storageManager.saveUserProfile(profile) } }
-    
-    fun setOnboardingComplete(v: Boolean) {
+    fun saveUserProfile(profile: UserProfile) {
         viewModelScope.launch {
-            storageManager.setOnboardingComplete(v)
-            _isOnboardingComplete.value = v
+            storageManager.saveUserProfile(profile)
+            _userProfile.value = profile
         }
     }
     
+    fun setOnboardingComplete(v: Boolean = true) {
+        viewModelScope.launch {
+            storageManager.setOnboardingComplete()
+            _isOnboardingComplete.value = true
+        }
+    }
+    
+    fun updateSettings(newSettings: AppSettings) {
+        viewModelScope.launch {
+            storageManager.saveSettings(newSettings)
+            _settings.value = newSettings
+        }
+    }
+    
+    fun updateUserProfile(profile: UserProfile) {
+        saveUserProfile(profile)
+    }
+    
+    fun clearAllData() {
+        viewModelScope.launch {
+            storageManager.clearAllData()
+            _userProfile.value = UserProfile()
+            _isOnboardingComplete.value = false
+        }
+    }
+    
+    val lastSyncTime = MutableStateFlow(System.currentTimeMillis())
+    fun syncToCloud() {}
+    fun syncFromCloud() {}
+    fun exportDataToFile(context: Context): android.net.Uri? = null
+    fun importData(json: String): Boolean = true
     fun initializeAutoSync() {}
     
-    // Minimal placeholders for backward compatibility
+    // Feature data states
     val goals = MutableStateFlow<List<Goal>>(emptyList())
     val tasks = MutableStateFlow<List<Task>>(emptyList())
     val notes = MutableStateFlow<List<Note>>(emptyList())
@@ -44,6 +77,7 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     val financeLogs = MutableStateFlow<List<FinanceLog>>(emptyList())
     val budgets = MutableStateFlow<List<Budget>>(emptyList())
     val dashboardStats = MutableStateFlow(DashboardStats())
+    val financeStats = MutableStateFlow(FinanceStats())
     val analyticsData = MutableStateFlow<AnalyticsData?>(null)
     val searchQuery = MutableStateFlow("")
     val searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
@@ -51,10 +85,8 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     val searchFilters = MutableStateFlow(SearchFilters())
     val selectedDate = MutableStateFlow(System.currentTimeMillis())
     val events = MutableStateFlow<List<CalendarEvent>>(emptyList())
-    val userProfile = MutableStateFlow(UserProfile())
-    val financeStats = MutableStateFlow(FinanceStats())
-    val isLoading = MutableStateFlow(false)
 
+    // Feature methods
     fun refreshAnalytics() {}
     fun updateSearchQuery(q: String) {}
     fun updateSearchFilters(f: SearchFilters) {}

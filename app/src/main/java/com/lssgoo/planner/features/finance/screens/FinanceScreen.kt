@@ -47,23 +47,39 @@ fun FinanceScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        "Finance Hub", 
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.headlineSmall
-                    ) 
-                },
-                actions = {
-                    IconButton(onClick = { /* Sync logic or more options */ }) {
-                        Icon(Icons.Default.Sync, contentDescription = "Sync")
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding()))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.AccountBalanceWallet,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(28.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Finance Hub",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        IconButton(onClick = { /* Sync logic */ }) {
+                            Icon(Icons.Default.Sync, contentDescription = "Sync", tint = MaterialTheme.colorScheme.primary)
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
+                }
+            }
         },
         floatingActionButton = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

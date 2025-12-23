@@ -46,7 +46,7 @@ fun GoalsScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 16.dp)
+                            .padding(horizontal = 20.dp, vertical = 8.dp) // Reduced from 16.dp
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(

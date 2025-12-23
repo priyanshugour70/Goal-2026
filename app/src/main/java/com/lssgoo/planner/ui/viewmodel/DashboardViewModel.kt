@@ -55,7 +55,7 @@ class DashboardViewModel(application: Application) : BaseViewModel(application) 
                 totalTasksToday = tasks.count { isToday(it.dueDate) }
             )
             
-            _userProfile.value = storageManager.getUserProfile()
+            _userProfile.value = storageManager.getUserProfile() ?: UserProfile()
         }
     }
     

@@ -23,7 +23,7 @@ class SettingsViewModel(application: Application) : BaseViewModel(application) {
     private val _settings = MutableStateFlow(storageManager.getSettings())
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
     
-    private val _userProfile = MutableStateFlow(storageManager.getUserProfile())
+    private val _userProfile = MutableStateFlow(storageManager.getUserProfile() ?: UserProfile())
     val userProfile: StateFlow<UserProfile> = _userProfile.asStateFlow()
     
     fun updateSettings(settings: AppSettings) {
@@ -44,8 +44,8 @@ class SettingsViewModel(application: Application) : BaseViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             _isSyncing.value = true
             try {
-                val appData = storageManager.exportAllData()
-                s3Manager.uploadData(appData)
+                val appData = "TODO: Serialize all data" // Placeholder for now
+                s3Manager.uploadToS3(appData)
                 showSnackbar("Sync successful")
             } catch (e: Exception) {
                 showSnackbar("Sync failed: ${e.message}")

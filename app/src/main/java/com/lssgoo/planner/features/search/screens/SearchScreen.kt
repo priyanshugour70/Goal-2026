@@ -60,7 +60,7 @@ fun SearchScreen(
             Column(
                 modifier = Modifier
                     .padding(top = systemBarsPadding.calculateTopPadding())
-                    .padding(16.dp)
+                    .padding(8.dp) // Reduced from 16.dp
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically

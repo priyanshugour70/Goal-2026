@@ -73,7 +73,7 @@ fun DashboardScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(
-            top = statusBarPadding.calculateTopPadding() + 16.dp,
+            top = statusBarPadding.calculateTopPadding() + 8.dp, // Reduced from 16.dp
             bottom = 100.dp
         )
     ) {

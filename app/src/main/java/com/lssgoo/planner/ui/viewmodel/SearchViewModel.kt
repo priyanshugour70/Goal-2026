@@ -85,7 +85,7 @@ class SearchViewModel(application: Application) : BaseViewModel(application) {
             
             // Save search history (on UI thread to avoid concurrent modification issues if necessary)
             if (results.isNotEmpty()) {
-                storageManager.saveRecentSearch(query)
+                storageManager.addRecentSearch(query)
                 _recentSearches.value = storageManager.getRecentSearches()
             }
         }

@@ -64,9 +64,9 @@ fun TasksScreen(
     Scaffold(
         topBar = {
             Column {
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding()))
                 Row(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(AppIcons.Task, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))

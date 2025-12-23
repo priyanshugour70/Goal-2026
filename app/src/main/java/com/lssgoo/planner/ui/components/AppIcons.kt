@@ -79,4 +79,7 @@ object AppIcons {
     val Trophy = Icons.Default.EmojiEvents
     val Notification = Icons.Default.Notifications
     val Celebration = Icons.Default.Celebration
+    val SettingsBackupRestore = Icons.Default.SettingsBackupRestore
+    val Info = Icons.Default.Info
+    val Assessment = Icons.Default.Assessment
 }

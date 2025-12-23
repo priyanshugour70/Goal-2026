@@ -105,6 +105,13 @@ enum class BottomNavDestination(
         selectedIcon = Icons.Filled.CalendarMonth,
         unselectedIcon = Icons.Outlined.CalendarMonth,
         emoji = "📅"
+    ),
+    SETTINGS(
+        route = Routes.SETTINGS,
+        label = "Settings",
+        selectedIcon = Icons.Filled.Settings,
+        unselectedIcon = Icons.Outlined.Settings,
+        emoji = "⚙️"
     )
 }
 

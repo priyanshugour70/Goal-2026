@@ -11,6 +11,12 @@ class AnalyticsManager(
     private val storageManager: LocalStorageManager
 ) {
     
+    fun generateComprehensiveReport(): AnalyticsData {
+        val endDate = System.currentTimeMillis()
+        val startDate = endDate - (30L * 24 * 60 * 60 * 1000)
+        return generateAnalytics(startDate, endDate)
+    }
+    
     fun generateAnalytics(
         startDate: Long,
         endDate: Long

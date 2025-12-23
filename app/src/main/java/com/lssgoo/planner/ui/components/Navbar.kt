@@ -36,76 +36,114 @@ fun DynamicBottomNavBar(
     modifier: Modifier = Modifier
 ) {
     val accentColor = getAccentColorForRoute(currentRoute)
+    val scrollState = rememberScrollState()
+    
+    val destinations = BottomNavDestination.entries
+    val currentIndex = remember(currentRoute) {
+        destinations.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
+    }
+
+    // Scroll to active item when it changes
+    LaunchedEffect(currentIndex) {
+        // Approximate width for item (width varies due to expanded text)
+        // Scroll to the current item's approximate position
+        scrollState.animateScrollTo(currentIndex * 70)
+    }
     
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .padding(horizontal = 8.dp, vertical = 8.dp) // Reduced padding
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(
-                    elevation = 20.dp,
+                    elevation = 12.dp,
                     shape = RoundedCornerShape(28.dp),
-                    ambientColor = accentColor.copy(alpha = 0.3f),
-                    spotColor = accentColor.copy(alpha = 0.3f)
+                    ambientColor = accentColor.copy(alpha = 0.2f),
+                    spotColor = accentColor.copy(alpha = 0.2f)
                 ),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
             )
         ) {
-            val scrollState = rememberScrollState()
-            val canScrollLeft by remember { derivedStateOf { scrollState.value > 0 } }
-            val canScrollRight by remember { derivedStateOf { scrollState.canScrollForward } }
-            val surfaceColor = MaterialTheme.colorScheme.surface
-            
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier
-                        .horizontalScroll(scrollState)
-                        .padding(horizontal = 8.dp, vertical = 8.dp)
-                        .drawWithContent {
-                            drawContent()
-                            if (canScrollLeft) {
-                                drawRect(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(surfaceColor.copy(alpha = 0.95f), surfaceColor.copy(alpha = 0f)),
-                                        startX = 0f,
-                                        endX = 40.dp.toPx()
-                                    )
-                                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left Button
+                IconButton(
+                    onClick = {
+                        if (currentIndex > 0) {
+                            val prev = destinations[currentIndex - 1]
+                            navController.navigate(prev.route) {
+                                popUpTo(Routes.DASHBOARD) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            if (canScrollRight) {
-                                drawRect(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(surfaceColor.copy(alpha = 0f), surfaceColor.copy(alpha = 0.95f)),
-                                        startX = size.width - 40.dp.toPx(),
-                                        endX = size.width
-                                    )
-                                )
-                            }
-                        },
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        }
+                    },
+                    modifier = Modifier.size(36.dp),
+                    enabled = currentIndex > 0
                 ) {
-                    BottomNavDestination.entries.forEach { destination ->
-                        DynamicNavItem(
-                            destination = destination,
-                            isSelected = currentRoute == destination.route,
-                            accentColor = accentColor,
-                            onClick = {
-                                if (currentRoute != destination.route) {
-                                    navController.navigate(destination.route) {
-                                        popUpTo(Routes.DASHBOARD) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
+                    Icon(
+                        imageVector = Icons.Default.ChevronLeft,
+                        contentDescription = "Previous",
+                        tint = if (currentIndex > 0) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
+                }
+
+                Box(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier
+                            .horizontalScroll(scrollState)
+                            .padding(horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        destinations.forEach { destination ->
+                            DynamicNavItem(
+                                destination = destination,
+                                isSelected = currentRoute == destination.route,
+                                accentColor = accentColor,
+                                onClick = {
+                                    if (currentRoute != destination.route) {
+                                        navController.navigate(destination.route) {
+                                            popUpTo(Routes.DASHBOARD) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
                                     }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
+                }
+
+                // Right Button
+                IconButton(
+                    onClick = {
+                        if (currentIndex < destinations.size - 1) {
+                            val next = destinations[currentIndex + 1]
+                            navController.navigate(next.route) {
+                                popUpTo(Routes.DASHBOARD) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
+                    modifier = Modifier.size(36.dp),
+                    enabled = currentIndex < destinations.size - 1
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "Next",
+                        tint = if (currentIndex < destinations.size - 1) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    )
                 }
             }
         }

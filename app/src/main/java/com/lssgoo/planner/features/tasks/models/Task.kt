@@ -1,6 +1,7 @@
 package com.lssgoo.planner.features.tasks.models
 
 import java.util.UUID
+import com.lssgoo.planner.features.reminders.models.ItemPriority
 
 /**
  * Represents a task in the app with full linking and history tracking

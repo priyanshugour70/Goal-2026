@@ -16,7 +16,7 @@ import androidx.core.content.ContextCompat
 import com.lssgoo.planner.MainActivity
 import com.lssgoo.planner.R
 import com.lssgoo.planner.features.dashboard.models.MotivationalThoughts
-import com.lssgoo.planner.data.model.NotificationContext
+import com.lssgoo.planner.features.dashboard.models.NotificationContext
 import java.util.*
 
 /**
