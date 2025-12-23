@@ -23,8 +23,19 @@ object Routes {
     const val ONBOARDING = "onboarding"
     const val PROFILE = "profile"
     
+    // New Feature Routes
+    const val HABITS = "habits"
+    const val HABIT_DETAIL = "habit/{habitId}"
+    const val SEARCH = "search"
+    const val ANALYTICS = "analytics"
+    const val JOURNAL = "journal"
+    const val JOURNAL_ENTRY = "journal/{entryId}"
+    const val FINANCE = "finance"
+    
     fun goalDetail(goalId: String) = "goal/$goalId"
     fun noteDetail(noteId: String) = "note/$noteId"
+    fun habitDetail(habitId: String) = "habit/$habitId"
+    fun journalEntry(entryId: String) = "journal/$entryId"
 }
 
 /**
@@ -53,12 +64,33 @@ enum class BottomNavDestination(
         unselectedIcon = Icons.Outlined.EmojiEvents,
         emoji = "🎯"
     ),
-    CALENDAR(
-        route = Routes.CALENDAR,
-        label = "Calendar",
-        selectedIcon = Icons.Filled.CalendarMonth,
-        unselectedIcon = Icons.Outlined.CalendarMonth,
-        emoji = "📅"
+    TASKS(
+        route = Routes.TASKS,
+        label = "Tasks",
+        selectedIcon = Icons.Filled.TaskAlt,
+        unselectedIcon = Icons.Outlined.TaskAlt,
+        emoji = "✅"
+    ),
+    FINANCE(
+        route = Routes.FINANCE,
+        label = "Finance",
+        selectedIcon = Icons.Filled.AccountBalanceWallet,
+        unselectedIcon = Icons.Outlined.AccountBalanceWallet,
+        emoji = "💰"
+    ),
+    HABITS(
+        route = Routes.HABITS,
+        label = "Habits",
+        selectedIcon = Icons.Filled.CheckCircle,
+        unselectedIcon = Icons.Outlined.CheckCircle,
+        emoji = "🔄"
+    ),
+    JOURNAL(
+        route = Routes.JOURNAL,
+        label = "Journal",
+        selectedIcon = Icons.Filled.Book,
+        unselectedIcon = Icons.Outlined.Book,
+        emoji = "📔"
     ),
     NOTES(
         route = Routes.NOTES,
@@ -67,12 +99,12 @@ enum class BottomNavDestination(
         unselectedIcon = Icons.Outlined.StickyNote2,
         emoji = "📝"
     ),
-    TASKS(
-        route = Routes.TASKS,
-        label = "Tasks",
-        selectedIcon = Icons.Filled.TaskAlt,
-        unselectedIcon = Icons.Outlined.TaskAlt,
-        emoji = "✅"
+    CALENDAR(
+        route = Routes.CALENDAR,
+        label = "Calendar",
+        selectedIcon = Icons.Filled.CalendarMonth,
+        unselectedIcon = Icons.Outlined.CalendarMonth,
+        emoji = "📅"
     )
 }
 

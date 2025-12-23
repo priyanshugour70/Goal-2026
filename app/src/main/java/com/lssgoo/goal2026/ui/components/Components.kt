@@ -285,7 +285,7 @@ fun TaskItem(
 }
 
 /**
- * Note card
+ * Note card - Styled for Black/White/Blue theme
  */
 @Composable
 fun NoteCard(
@@ -294,14 +294,17 @@ fun NoteCard(
     onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val noteColor = Color(note.color)
+    
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(note.color)
+            containerColor = noteColor.copy(alpha = 0.15f)
         ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, noteColor.copy(alpha = 0.3f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -318,7 +321,7 @@ fun NoteCard(
                     text = note.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black.copy(alpha = 0.87f),
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -328,7 +331,7 @@ fun NoteCard(
                     Icon(
                         imageVector = Icons.Filled.PushPin,
                         contentDescription = "Pinned",
-                        tint = Color.Black.copy(alpha = 0.6f),
+                        tint = noteColor,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -339,7 +342,7 @@ fun NoteCard(
             Text(
                 text = note.content,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis
             )
@@ -351,14 +354,15 @@ fun NoteCard(
                 ) {
                     note.tags.take(3).forEach { tag ->
                         Surface(
-                            color = Color.Black.copy(alpha = 0.1f),
+                            color = noteColor.copy(alpha = 0.2f),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 text = "#$tag",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.Black.copy(alpha = 0.7f)
+                                color = noteColor,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }

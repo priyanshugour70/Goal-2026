@@ -8,7 +8,14 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,6 +32,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.border
 import com.lssgoo.goal2026.data.model.*
 import com.lssgoo.goal2026.ui.theme.*
 import com.lssgoo.goal2026.ui.components.AppIcons
@@ -32,6 +41,9 @@ import com.lssgoo.goal2026.ui.viewmodel.Goal2026ViewModel
 import androidx.compose.material3.Switch
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,32 +91,43 @@ fun SettingsScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.background,
+                shadowElevation = 0.dp
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding()))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.Filled.ArrowBack, 
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             AppIcons.Settings,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(28.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = "Settings",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
+                }
+            }
         },
         modifier = modifier
     ) { paddingValues ->
@@ -117,10 +140,25 @@ fun SettingsScreen(
         ) {
             // Profile card
             item {
+                var showEditProfileDialog by remember { mutableStateOf(false) }
+                
                 ProfileCard(
                     userProfile = userProfile,
-                    stats = stats
+                    stats = stats,
+                    onEditClick = { showEditProfileDialog = true }
                 )
+                
+                // Edit Profile Dialog
+                if (showEditProfileDialog) {
+                    EditProfileDialog(
+                        userProfile = userProfile,
+                        onDismiss = { showEditProfileDialog = false },
+                        onSave = { updatedProfile ->
+                            viewModel.updateUserProfile(updatedProfile)
+                            showEditProfileDialog = false
+                        }
+                    )
+                }
             }
             
             // Appearance Section
@@ -194,6 +232,64 @@ fun SettingsScreen(
                         confirmButton = {
                             TextButton(onClick = { showThemeDialog = false }) {
                                 Text("Cancel")
+                            }
+                        }
+                    )
+                }
+            }
+            
+            // Cloud Sync Section
+            item {
+                val isSyncing by viewModel.isSyncing.collectAsState()
+                val lastSyncTime by viewModel.lastSyncTime.collectAsState()
+                val lastSyncTimeValue = lastSyncTime // Store in local variable for smart cast
+                
+                SettingsSection(
+                    title = "Cloud Sync (AWS S3)",
+                    icon = Icons.Filled.CloudSync
+                ) {
+                    SettingsItem(
+                        icon = Icons.Filled.CloudUpload,
+                        title = "Sync to Cloud",
+                        subtitle = if (lastSyncTimeValue != null) {
+                            "Last synced: ${SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(Date(lastSyncTimeValue))}"
+                        } else {
+                            "Upload your data to AWS S3"
+                        },
+                        onClick = {
+                            if (!isSyncing) {
+                                viewModel.syncToCloud()
+                            }
+                        },
+                        iconColor = GoalColors.career,
+                        trailing = {
+                            if (isSyncing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+                    )
+                    
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    
+                    SettingsItem(
+                        icon = Icons.Filled.CloudDownload,
+                        title = "Sync from Cloud",
+                        subtitle = "Download your data from AWS S3",
+                        onClick = {
+                            if (!isSyncing) {
+                                viewModel.syncFromCloud()
+                            }
+                        },
+                        iconColor = GoalColors.health,
+                        trailing = {
+                            if (isSyncing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
                             }
                         }
                     )
@@ -420,75 +516,124 @@ fun SettingsScreen(
 fun ProfileCard(
     userProfile: com.lssgoo.goal2026.data.model.UserProfile?,
     stats: DashboardStats,
+    onEditClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val userName = userProfile?.firstName ?: "Goal Achiever"
     Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onEditClick),
+        shape = RoundedCornerShape(28.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    Brush.linearGradient(GradientColors.purpleBlue)
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                            MaterialTheme.colorScheme.primary
+                        )
+                    )
                 )
+                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(28.dp))
                 .padding(24.dp)
         ) {
             Column {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Avatar with Outer Ring
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
+                            .size(72.dp)
+                            .border(2.dp, Color.White.copy(alpha = 0.3f), CircleShape)
+                            .padding(4.dp)
                     ) {
-                        Text(
-                            text = userName.first().uppercase(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = userName.first().uppercase(),
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                     
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(20.dp))
                     
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = userName,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
+                            letterSpacing = (-0.5).sp
                         )
-                        Text(
-                            text = userProfile?.occupation ?: "2026 Goal Crusher",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.8f)
+                        Surface(
+                            color = Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = userProfile?.occupation?.uppercase() ?: "2026 VISIONARY",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    
+                    IconButton(
+                        onClick = onEditClick,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                    ) {
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = "Edit Profile",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(28.dp))
                 
+                // Detailed Stats Grid
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     ProfileStat(
                         value = "${(stats.overallProgress * 100).toInt()}%",
-                        label = "Progress"
+                        label = "Goal Progress",
+                        icon = Icons.Default.TrendingUp
                     )
+                    VerticalDivider(modifier = Modifier.height(40.dp).width(1.dp).background(Color.White.copy(alpha = 0.1f)))
                     ProfileStat(
                         value = "${stats.currentStreak}",
-                        label = "Streak"
+                        label = "Day Streak",
+                        icon = Icons.Default.LocalFireDepartment
                     )
+                    VerticalDivider(modifier = Modifier.height(40.dp).width(1.dp).background(Color.White.copy(alpha = 0.1f)))
                     ProfileStat(
                         value = "${stats.completedMilestones}",
-                        label = "Milestones"
+                        label = "Victories",
+                        icon = Icons.Default.EmojiEvents
                     )
                 }
             }
@@ -500,22 +645,29 @@ fun ProfileCard(
 fun ProfileStat(
     value: String,
     label: String,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
         Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall,
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.White.copy(alpha = 0.8f)
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 9.sp
         )
     }
 }
@@ -674,6 +826,181 @@ fun ThemeOption(
                 modifier = Modifier.size(24.dp)
             )
         }
+    }
+}
+
+@Composable
+fun EditProfileDialog(
+    userProfile: com.lssgoo.goal2026.data.model.UserProfile?,
+    onDismiss: () -> Unit,
+    onSave: (com.lssgoo.goal2026.data.model.UserProfile) -> Unit
+) {
+    var firstName by remember { mutableStateOf(userProfile?.firstName ?: "") }
+    var lastName by remember { mutableStateOf(userProfile?.lastName ?: "") }
+    var email by remember { mutableStateOf(userProfile?.email ?: "") }
+    var phoneNumber by remember { mutableStateOf(userProfile?.phoneNumber ?: "") }
+    var occupation by remember { mutableStateOf(userProfile?.occupation ?: "") }
+    var selectedGender by remember { mutableStateOf(userProfile?.gender ?: com.lssgoo.goal2026.data.model.Gender.PREFER_NOT_TO_SAY) }
+    
+    val dateFormat = remember { java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()) }
+    val dateOfBirthDisplay = remember(userProfile?.dateOfBirth) {
+        userProfile?.dateOfBirth?.let { dateFormat.format(java.util.Date(it)) } ?: "Not set"
+    }
+    
+    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf<Long?>(userProfile?.dateOfBirth) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Filled.Person,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = { Text("Edit Profile") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // First Name
+                OutlinedTextField(
+                    value = firstName,
+                    onValueChange = { firstName = it },
+                    label = { Text("First Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                // Last Name
+                OutlinedTextField(
+                    value = lastName,
+                    onValueChange = { lastName = it },
+                    label = { Text("Last Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                // Email
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                // Phone Number
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text("Phone Number") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                // Occupation
+                OutlinedTextField(
+                    value = occupation,
+                    onValueChange = { occupation = it },
+                    label = { Text("Occupation") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                // Date of Birth
+                OutlinedTextField(
+                    value = dateOfBirthDisplay,
+                    onValueChange = { },
+                    label = { Text("Date of Birth") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Filled.CalendarToday, contentDescription = "Select Date")
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                // Gender
+                Text(
+                    text = "Gender",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    com.lssgoo.goal2026.data.model.Gender.entries.forEach { gender ->
+                        FilterChip(
+                            selected = selectedGender == gender,
+                            onClick = { selectedGender = gender },
+                            label = { Text(gender.displayName) }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val updatedProfile = (userProfile ?: com.lssgoo.goal2026.data.model.UserProfile()).copy(
+                        firstName = firstName,
+                        lastName = lastName,
+                        email = email,
+                        phoneNumber = phoneNumber,
+                        occupation = occupation,
+                        gender = selectedGender,
+                        dateOfBirth = selectedDate,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    onSave(updatedProfile)
+                },
+                enabled = firstName.isNotBlank()
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+    
+    // Date Picker (simplified - using a basic dialog)
+    if (showDatePicker) {
+        AlertDialog(
+            onDismissRequest = { showDatePicker = false },
+            title = { Text("Select Date of Birth") },
+            text = {
+                Text("Date picker implementation - for now, you can manually enter dates in the future")
+            },
+            confirmButton = {
+                Button(onClick = { showDatePicker = false }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 

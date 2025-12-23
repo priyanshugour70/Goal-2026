@@ -5,22 +5,24 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +56,11 @@ import com.lssgoo.goal2026.ui.screens.onboarding.OnboardingScreen
 import com.lssgoo.goal2026.ui.screens.reminders.RemindersScreen
 import com.lssgoo.goal2026.ui.screens.settings.SettingsScreen
 import com.lssgoo.goal2026.ui.screens.tasks.TasksScreen
+import com.lssgoo.goal2026.ui.screens.habits.HabitsScreen
+import com.lssgoo.goal2026.ui.screens.search.SearchScreen
+import com.lssgoo.goal2026.ui.screens.analytics.AnalyticsScreen
+import com.lssgoo.goal2026.ui.screens.journal.JournalScreen
+import com.lssgoo.goal2026.ui.screens.finance.FinanceScreen
 import com.lssgoo.goal2026.ui.theme.Goal2026Theme
 import com.lssgoo.goal2026.ui.theme.GradientColors
 import com.lssgoo.goal2026.ui.viewmodel.Goal2026ViewModel
@@ -79,23 +86,29 @@ fun Goal2026App() {
     val navController = rememberNavController()
     val viewModel: Goal2026ViewModel = viewModel()
     
+    // Initialize auto-sync
+    LaunchedEffect(Unit) {
+        viewModel.initializeAutoSync()
+    }
+    
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     
     // Get onboarding status
     val isOnboardingComplete by viewModel.isOnboardingComplete.collectAsState()
     
-    // Dynamic status bar color based on current route
+    // Dynamic status bar color - Black for dark, White for light
     val view = LocalView.current
-    val statusBarColor = getStatusBarColorForRoute(currentRoute)
-    val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF0D0D1A) // backgroundDark
+    val statusBarColor = MaterialTheme.colorScheme.background
+    val isDarkTheme = MaterialTheme.colorScheme.background == Color.Black
     
     LaunchedEffect(currentRoute, statusBarColor, isDarkTheme) {
         if (!view.isInEditMode) {
             val window = (view.context as android.app.Activity).window
             val insetsController = WindowCompat.getInsetsController(window, view)
+            // Light icons for dark theme (black bg), dark icons for light theme (white bg)
             insetsController.isAppearanceLightStatusBars = !isDarkTheme
-            // Set status bar color - using deprecated method for compatibility
+            // Set status bar color to match background
             @Suppress("DEPRECATION")
             window.statusBarColor = statusBarColor.toArgb()
         }
@@ -134,12 +147,12 @@ fun Goal2026App() {
                     )
                 }
             },
-            contentWindowInsets = WindowInsets.systemBars
+            contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { paddingValues ->
             NavHost(
                 navController = navController,
                 startDestination = Routes.DASHBOARD,
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
             ) {
                 // Dashboard
                 composable(Routes.DASHBOARD) {
@@ -153,6 +166,18 @@ fun Goal2026App() {
                         },
                         onViewAllTasks = {
                             navController.navigate(Routes.TASKS)
+                        },
+                        onViewAllHabits = {
+                            navController.navigate(Routes.HABITS)
+                        },
+                        onViewAllJournal = {
+                            navController.navigate(Routes.JOURNAL)
+                        },
+                        onViewAllNotes = {
+                            navController.navigate(Routes.NOTES)
+                        },
+                        onSearchClick = {
+                            navController.navigate(Routes.SEARCH)
                         }
                     )
                 }
@@ -210,21 +235,62 @@ fun Goal2026App() {
                         onBack = { navController.popBackStack() }
                     )
                 }
+                
+                // Habits
+                composable(Routes.HABITS) {
+                    HabitsScreen(
+                        viewModel = viewModel,
+                        onHabitClick = { habitId ->
+                            navController.navigate(Routes.habitDetail(habitId))
+                        }
+                    )
+                }
+                
+                // Search
+                composable(Routes.SEARCH) {
+                    SearchScreen(
+                        viewModel = viewModel,
+                        onBack = { navController.popBackStack() },
+                        onResultClick = { result ->
+                            when (result.type) {
+                                com.lssgoo.goal2026.data.model.SearchResultType.GOAL -> navController.navigate(Routes.goalDetail(result.id))
+                                com.lssgoo.goal2026.data.model.SearchResultType.TASK -> navController.navigate(Routes.TASKS)
+                                com.lssgoo.goal2026.data.model.SearchResultType.NOTE -> navController.navigate(Routes.noteDetail(result.id))
+                                com.lssgoo.goal2026.data.model.SearchResultType.EVENT -> navController.navigate(Routes.CALENDAR)
+                                com.lssgoo.goal2026.data.model.SearchResultType.REMINDER -> navController.navigate(Routes.REMINDERS)
+                                com.lssgoo.goal2026.data.model.SearchResultType.MILESTONE -> navController.navigate(Routes.goalDetail(result.linkedGoalId ?: ""))
+                                com.lssgoo.goal2026.data.model.SearchResultType.HABIT -> navController.navigate(Routes.HABITS)
+                                com.lssgoo.goal2026.data.model.SearchResultType.JOURNAL -> navController.navigate(Routes.JOURNAL)
+                                com.lssgoo.goal2026.data.model.SearchResultType.FINANCE -> navController.navigate(Routes.FINANCE)
+                            }
+                        }
+                    )
+                }
+                
+                // Analytics
+                composable(Routes.ANALYTICS) {
+                    AnalyticsScreen(viewModel = viewModel)
+                }
+                
+                // Journal
+                composable(Routes.JOURNAL) {
+                    JournalScreen(
+                        viewModel = viewModel,
+                        onEntryClick = { entryId ->
+                            navController.navigate(Routes.journalEntry(entryId))
+                        }
+                    )
+                }
+                
+                // Finance
+                composable(Routes.FINANCE) {
+                    FinanceScreen(viewModel = viewModel)
+                }
             }
         }
     }
 }
 
-/**
- * Get dynamic status bar color based on current route
- * Matches the background color to prevent visual collapse while maintaining edge-to-edge
- */
-@Composable
-fun getStatusBarColorForRoute(route: String?): Color {
-    // Always match the background color to prevent collapse
-    // The status bar will blend seamlessly with the app background
-    return MaterialTheme.colorScheme.background
-}
 
 /**
  * Dynamic Bottom Navigation Bar with iOS-like polish
@@ -259,64 +325,134 @@ fun DynamicBottomNavBar(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
             )
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BottomNavDestination.entries.forEach { destination ->
-                    val isSelected = currentRoute == destination.route
+            val scrollState = rememberScrollState()
+            
+            // Observe scroll state changes
+            val canScrollLeft by remember { derivedStateOf { scrollState.value > 0 } }
+            val canScrollRight by remember { derivedStateOf { scrollState.canScrollForward } }
+            
+            // Capture surface color outside of drawWithContent (composable context)
+            val surfaceColor = MaterialTheme.colorScheme.surface
+            
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .horizontalScroll(scrollState)
+                        .padding(horizontal = 8.dp, vertical = 8.dp)
+                        .drawWithContent {
+                            drawContent()
+                            // Left fade gradient to indicate scrollable content
+                            if (canScrollLeft) {
+                                drawRect(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(
+                                            surfaceColor.copy(alpha = 0.95f),
+                                            surfaceColor.copy(alpha = 0f)
+                                        ),
+                                        startX = 0f,
+                                        endX = 40.dp.toPx()
+                                    )
+                                )
+                            }
+                            // Right fade gradient to indicate scrollable content
+                            if (canScrollRight) {
+                                drawRect(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(
+                                            surfaceColor.copy(alpha = 0f),
+                                            surfaceColor.copy(alpha = 0.95f)
+                                        ),
+                                        startX = size.width - 40.dp.toPx(),
+                                        endX = size.width
+                                    )
+                                )
+                            }
+                        },
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BottomNavDestination.entries.forEach { destination ->
+                        val isSelected = currentRoute == destination.route
+                        
+                        DynamicNavItem(
+                            destination = destination,
+                            isSelected = isSelected,
+                            accentColor = accentColor,
+                            onClick = {
+                                if (currentRoute != destination.route) {
+                                    navController.navigate(destination.route) {
+                                        popUpTo(Routes.DASHBOARD) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            }
+                        )
+                    }
                     
+                    // Settings button
                     DynamicNavItem(
-                        destination = destination,
-                        isSelected = isSelected,
+                        icon = AppIcons.SettingsOutlined,
+                        selectedIcon = AppIcons.Settings,
+                        label = "Settings",
+                        isSelected = currentRoute == Routes.SETTINGS,
                         accentColor = accentColor,
                         onClick = {
-                            if (currentRoute != destination.route) {
-                                navController.navigate(destination.route) {
-                                    popUpTo(Routes.DASHBOARD) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+                            navController.navigate(Routes.SETTINGS) {
+                                launchSingleTop = true
                             }
                         }
                     )
                 }
                 
-                // Settings button
-                DynamicNavItem(
-                    icon = AppIcons.SettingsOutlined,
-                    selectedIcon = AppIcons.Settings,
-                    label = "Settings",
-                    isSelected = currentRoute == Routes.SETTINGS,
-                    accentColor = accentColor,
-                    onClick = {
-                        navController.navigate(Routes.SETTINGS) {
-                            launchSingleTop = true
-                        }
-                    }
-                )
+                // Scroll indicators (chevrons) on edges - subtle visual cue
+                if (canScrollLeft) {
+                    Icon(
+                        imageVector = Icons.Filled.ChevronLeft,
+                        contentDescription = "Scroll left",
+                        tint = accentColor.copy(alpha = 0.5f),
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 8.dp)
+                            .size(18.dp)
+                    )
+                }
+                
+                if (canScrollRight) {
+                    Icon(
+                        imageVector = Icons.Filled.ChevronRight,
+                        contentDescription = "Scroll right",
+                        tint = accentColor.copy(alpha = 0.5f),
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 8.dp)
+                            .size(18.dp)
+                    )
+                }
             }
         }
     }
 }
 
 /**
- * Get accent color based on current route for bottom bar styling
+ * Get accent color based on current route for bottom bar styling - Light Blue variants
  */
 @Composable
 fun getAccentColorForRoute(route: String?): Color {
     return when (route) {
-        Routes.DASHBOARD -> MaterialTheme.colorScheme.primary
-        Routes.GOALS -> Color(0xFF6C63FF) // Purple
-        Routes.CALENDAR -> Color(0xFF00D9FF) // Cyan
-        Routes.NOTES -> Color(0xFFFF6B9D) // Pink
-        Routes.TASKS -> Color(0xFF4ADE80) // Green
-        Routes.SETTINGS -> MaterialTheme.colorScheme.tertiary
+        Routes.DASHBOARD -> MaterialTheme.colorScheme.primary  // Light Blue
+        Routes.GOALS -> Color(0xFF0097A7)  // Teal Blue
+        Routes.CALENDAR -> Color(0xFF00ACC1)  // Cyan Blue
+        Routes.NOTES -> Color(0xFF4DD0E1)  // Light Cyan
+        Routes.TASKS -> Color(0xFF26C6DA)  // Light Blue Cyan
+        Routes.HABITS -> Color(0xFF4DD0E1)  // Light Cyan
+        Routes.JOURNAL -> Color(0xFF0097A7)  // Teal Blue
+        Routes.FINANCE -> Color(0xFF26C6DA)  // Light Blue Cyan
+        Routes.SEARCH -> Color(0xFF00ACC1)  // Cyan Blue
+        Routes.ANALYTICS -> Color(0xFF0288D1)  // Blue
+        Routes.SETTINGS -> Color(0xFF0288D1)  // Blue
         else -> MaterialTheme.colorScheme.primary
     }
 }

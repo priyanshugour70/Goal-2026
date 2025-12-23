@@ -2,15 +2,16 @@ package com.lssgoo.goal2026.ui.screens.dashboard
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -18,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -39,27 +41,28 @@ fun DashboardScreen(
     onGoalClick: (String) -> Unit,
     onViewAllGoals: () -> Unit,
     onViewAllTasks: () -> Unit,
+    onViewAllHabits: () -> Unit,
+    onViewAllJournal: () -> Unit,
+    onViewAllNotes: () -> Unit,
+    onSearchClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Get safe area insets
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     val stats by viewModel.dashboardStats.collectAsState()
     val goals by viewModel.goals.collectAsState()
+    val habits by viewModel.habits.collectAsState()
+    val journalEntries by viewModel.journalEntries.collectAsState()
+    val notes by viewModel.notes.collectAsState()
+    val reminders by viewModel.reminders.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val userProfile by viewModel.userProfile.collectAsState()
+    val financeStats by viewModel.financeStats.collectAsState()
     
-    // Personalized greeting using user profile
     val greeting = remember(userProfile) {
         viewModel.getUserGreeting()
     }
     
     val dateFormat = remember { SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault()) }
     val currentDate = remember { dateFormat.format(Date()) }
-    
-    // Get motivational thought of the day
-    val motivationalThought = remember {
-        MotivationalThoughts.getThoughtOfTheDay()
-    }
     
     if (isLoading) {
         Box(
@@ -71,62 +74,80 @@ fun DashboardScreen(
         return
     }
     
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
+    
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(
-            top = statusBarPadding.calculateTopPadding(),
+            top = statusBarPadding.calculateTopPadding() + 16.dp,
             bottom = 100.dp
         )
     ) {
-        // Header with gradient
+        // Header
         item {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-                    .padding(horizontal = 20.dp)
-                    .padding(top = 20.dp, bottom = 20.dp)
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
-                Column {
-                    Text(
-                        text = greeting,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                Text(
+                    text = greeting,
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Search Bar
+                Surface(
+                    onClick = { onSearchClick() },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                ) {
                     Row(
+                        modifier = Modifier.padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = AppIcons.Target,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Let's crush your 2026 goals!",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            "Search your 2026 plan...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = AppIcons.Target,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = currentDate,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
+                        text = "Let's crush your 2026 goals!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                Text(
+                    text = currentDate,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
+        
+        item { Spacer(modifier = Modifier.height(16.dp)) }
         
         // Quick Stats Row
         item {
@@ -156,10 +177,21 @@ fun DashboardScreen(
                 }
                 item {
                     StatsCard(
-                        title = "Current Streak",
-                        value = "${stats.currentStreak}",
-                        subtitle = "Best: ${stats.longestStreak} days",
-                        icon = AppIcons.Streak,
+                        title = "Balance",
+                        value = "₹${String.format("%.0f", financeStats.currentBalance)}",
+                        subtitle = "In: ₹${String.format("%.0f", financeStats.totalIncome)}",
+                        icon = Icons.Default.AccountBalanceWallet,
+                        gradientColors = GradientColors.oceanBlue,
+                        modifier = Modifier.width(180.dp)
+                    )
+                }
+                item {
+                    val activeHabits = habits.count { it.isActive }
+                    StatsCard(
+                        title = "Active Habits",
+                        value = "$activeHabits",
+                        subtitle = "Keep it up!",
+                        icon = Icons.Default.Refresh,
                         gradientColors = GradientColors.orangePink,
                         modifier = Modifier.width(180.dp)
                     )
@@ -169,16 +201,16 @@ fun DashboardScreen(
         
         item { Spacer(modifier = Modifier.height(24.dp)) }
         
-        // Motivational Quote Card
+        // Motivational Quote
         item {
-            MotivationalQuoteCard(
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+            MotivationalQuoteCard(modifier = Modifier.padding(horizontal = 16.dp))
         }
         
         item { Spacer(modifier = Modifier.height(24.dp)) }
-        
-        // Today's Focus
+
+        // --- ALL TABS OVERVIEW SECTIONS ---
+
+        // 1. Goals Overview
         item {
             SectionHeader(
                 title = "Your Goals",
@@ -188,10 +220,6 @@ fun DashboardScreen(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
-        }
-        
-        // Goals horizontal scroll
-        item {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -200,39 +228,110 @@ fun DashboardScreen(
                     MiniGoalCard(
                         goal = goal,
                         onClick = { onGoalClick(goal.id) },
-                        modifier = Modifier.width(280.dp)
+                        modifier = Modifier.width(260.dp)
                     )
                 }
             }
         }
-        
+
         item { Spacer(modifier = Modifier.height(24.dp)) }
-        
-        // Quick Tasks Section
+
+        // 2. Habits Overview
+        item {
+            SectionHeader(
+                title = "Daily Habits",
+                icon = Icons.Default.CheckCircle,
+                action = "Track",
+                onActionClick = onViewAllHabits,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(habits.take(7)) { habit ->
+                    HabitOverviewItem(habit = habit)
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(24.dp)) }
+
+        // 3. Journal Snapshot
+        item {
+            SectionHeader(
+                title = "Latest Reflection",
+                icon = Icons.Default.MenuBook,
+                action = "Journal",
+                onActionClick = onViewAllJournal,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            val latestEntry = journalEntries.firstOrNull()
+            if (latestEntry != null) {
+                RecentJournalCard(
+                    entry = latestEntry,
+                    onClick = onViewAllJournal,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            } else {
+                EmptyStateCard("No entries yet", "Capture your first thought today", Icons.Default.Edit, modifier = Modifier.padding(horizontal = 16.dp))
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(24.dp)) }
+
+        // 4. Notes Stream
+        item {
+            SectionHeader(
+                title = "Recent Notes",
+                icon = Icons.Default.StickyNote2,
+                action = "Manage",
+                onActionClick = onViewAllNotes,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            if (notes.isEmpty()) {
+                EmptyStateCard("Empty library", "Keep your ideas safe", Icons.Default.NoteAdd, modifier = Modifier.padding(horizontal = 16.dp))
+            } else {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(notes.take(5)) { note ->
+                        NoteMiniCard(note = note, modifier = Modifier.width(180.dp))
+                    }
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(24.dp)) }
+
+        // 5. Tasks & Reminders
         item {
             SectionHeader(
                 title = "Upcoming Tasks",
                 icon = AppIcons.Tasks,
-                action = "View All",
+                action = "Schedule",
                 onActionClick = onViewAllTasks,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
         
-        // Upcoming tasks
         val upcomingTasks = viewModel.getUpcomingTasks()
         if (upcomingTasks.isEmpty()) {
             item {
                 EmptyState(
-                    title = "No upcoming tasks",
-                    description = "Add tasks to stay on track with your goals",
+                    title = "All caught up!",
+                    description = "Add tasks to your workflow",
                     icon = Icons.Outlined.TaskAlt,
                     modifier = Modifier.padding(16.dp)
                 )
             }
         } else {
-            items(upcomingTasks) { task ->
+            items(upcomingTasks.take(3)) { task ->
                 TaskItem(
                     task = task,
                     onToggle = { viewModel.toggleTaskCompletion(task.id) },
@@ -241,14 +340,259 @@ fun DashboardScreen(
                 )
             }
         }
+
+        item { Spacer(modifier = Modifier.height(32.dp)) }
+
+        // --- NEW ANALYTICS SECTION WITH GRAPHS ---
+        item {
+            Text(
+                text = "Analytics Overview",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        item {
+            GoalBarChart(
+                goals = goals,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+        item { Spacer(modifier = Modifier.height(24.dp)) }
+
+        item {
+            FinanceSummaryChart(
+                stats = financeStats,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
         
         item { Spacer(modifier = Modifier.height(24.dp)) }
         
-        // 2026 Progress Overview
+        // Year Progress
         item {
-            YearProgressCard(
-                modifier = Modifier.padding(horizontal = 16.dp)
+            YearProgressCard(modifier = Modifier.padding(horizontal = 16.dp))
+        }
+    }
+}
+
+@Composable
+fun GoalBarChart(goals: List<Goal>, modifier: Modifier = Modifier) {
+    val topGoals = goals.take(5)
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                "Goal Performance",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                topGoals.forEach { goal ->
+                    val progress = if (goal.milestones.isNotEmpty()) 
+                        goal.milestones.count { it.isCompleted }.toFloat() / goal.milestones.size else 0f
+                    
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(goal.title, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                            Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(progress.coerceIn(0.01f, 1f))
+                                    .fillMaxHeight()
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(Color(goal.color), Color(goal.color).copy(alpha = 0.6f))
+                                        )
+                                    )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FinanceSummaryChart(stats: FinanceStats, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Radial Chart
+            Box(contentAlignment = Alignment.Center) {
+                val total = (stats.totalIncome + stats.totalExpense).coerceAtLeast(1.0)
+                val incomeRatio = (stats.totalIncome / total).toFloat()
+                
+                CircularProgressIndicator(
+                    progress = { 1f },
+                    modifier = Modifier.size(100.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    strokeWidth = 12.dp,
+                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+                CircularProgressIndicator(
+                    progress = { incomeRatio },
+                    modifier = Modifier.size(100.dp),
+                    color = Color(0xFF4CAF50), // Income Green
+                    strokeWidth = 12.dp,
+                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+                
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Flow", style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        "${(incomeRatio * 100).toInt()}%",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.width(28.dp))
+            
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LegendItem(label = "Income", value = "₹${stats.totalIncome.toInt()}", color = Color(0xFF4CAF50))
+                LegendItem(label = "Expense", value = "₹${stats.totalExpense.toInt()}", color = Color(0xFFF44336))
+                LegendItem(label = "Balance", value = "₹${stats.currentBalance.toInt()}", color = MaterialTheme.colorScheme.primary)
+            }
+        }
+    }
+}
+
+@Composable
+fun LegendItem(label: String, value: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(color))
+        Spacer(modifier = Modifier.width(10.dp))
+        Column {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun HabitOverviewItem(habit: Habit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(Color(habit.color).copy(alpha = 0.15f))
+                .border(1.dp, Color(habit.color).copy(alpha = 0.3f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(habit.icon, fontSize = 20.sp)
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = habit.title.take(8),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+fun RecentJournalCard(entry: JournalEntry, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(entry.mood.emoji, fontSize = 32.sp)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = entry.title.ifBlank { "Journal Entry" },
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = entry.content.take(60) + "...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NoteMiniCard(note: Note, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = note.title,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = note.content,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun EmptyStateCard(title: String, subtitle: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
@@ -270,7 +614,7 @@ fun MiniGoalCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -342,7 +686,7 @@ fun MotivationalQuoteCard(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
         )
     ) {
         Row(
@@ -383,7 +727,6 @@ fun YearProgressCard(modifier: Modifier = Modifier) {
     val progress = dayOfYear.toFloat() / totalDays
     val daysRemaining = totalDays - dayOfYear
     
-    // Calculate progress for 2026 specifically
     val year = calendar.get(Calendar.YEAR)
     val is2026 = year == 2026
     
@@ -393,7 +736,7 @@ fun YearProgressCard(modifier: Modifier = Modifier) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -460,32 +803,6 @@ fun YearProgressCard(modifier: Modifier = Modifier) {
                 gradientColors = GradientColors.purpleBlue,
                 height = 10
             )
-            
-            if (!is2026) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Surface(
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Info,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.tertiary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Your goals are set for 2026. Keep preparing!",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                    }
-                }
-            }
         }
     }
 }

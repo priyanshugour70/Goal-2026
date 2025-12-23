@@ -24,12 +24,19 @@ class LocalStorageManager(context: Context) {
         private const val KEY_TASKS = "tasks"
         private const val KEY_EVENTS = "events"
         private const val KEY_HABITS = "habit_entries"
+        private const val KEY_HABITS_LIST = "habits_list"
         private const val KEY_SETTINGS = "settings"
         private const val KEY_FIRST_LAUNCH = "first_launch"
         private const val KEY_LAST_SYNC = "last_sync"
         private const val KEY_USER_PROFILE = "user_profile"
         private const val KEY_REMINDERS = "reminders"
         private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
+        private const val KEY_JOURNAL_ENTRIES = "journal_entries"
+        private const val KEY_JOURNAL_PROMPTS = "journal_prompts"
+        private const val KEY_RECENT_SEARCHES = "recent_searches"
+        private const val KEY_FINANCE_TRANSACTIONS = "finance_transactions"
+        private const val KEY_FINANCE_BUDGETS = "finance_budgets"
+        private const val KEY_FINANCE_LOGS = "finance_logs"
     }
     
     // ======================== GOALS ========================
@@ -330,13 +337,19 @@ class LocalStorageManager(context: Context) {
      */
     fun exportAllData(): String {
         val appData = AppData(
-            version = 1,
+            version = 2,
             exportedAt = System.currentTimeMillis(),
             goals = getGoals(),
             notes = getNotes(),
             tasks = getTasks(),
             events = getEvents(),
+            reminders = getReminders(),
             habitEntries = getHabitEntries(),
+            habits = getHabits(),
+            journalEntries = getJournalEntries(),
+            transactions = getTransactions(),
+            budgets = getBudgets(),
+            logs = getFinanceLogs(),
             settings = getSettings()
         )
         return gson.toJson(appData)
@@ -353,6 +366,16 @@ class LocalStorageManager(context: Context) {
             saveNotes(appData.notes)
             saveTasks(appData.tasks)
             saveEvents(appData.events)
+            if (appData.version >= 2) {
+                appData.reminders?.let { saveReminders(it) }
+                appData.habits?.let { saveHabits(it) }
+                appData.journalEntries?.let { saveJournalEntries(it) }
+            }
+            if (appData.version >= 3) {
+                appData.transactions?.let { saveTransactions(it) }
+                appData.budgets?.let { saveBudgets(it) }
+                appData.logs?.let { saveFinanceLogs(it) }
+            }
             saveHabitEntries(appData.habitEntries)
             saveSettings(appData.settings)
             prefs.edit().putLong(KEY_LAST_SYNC, System.currentTimeMillis()).apply()
@@ -455,5 +478,292 @@ class LocalStorageManager(context: Context) {
         calendar.set(java.util.Calendar.SECOND, 0)
         calendar.set(java.util.Calendar.MILLISECOND, 0)
         return calendar.timeInMillis
+    }
+    
+    // ======================== HABITS ========================
+    
+    fun saveHabits(habits: List<Habit>) {
+        val json = gson.toJson(habits)
+        prefs.edit().putString(KEY_HABITS_LIST, json).apply()
+    }
+    
+    fun getHabits(): List<Habit> {
+        val json = prefs.getString(KEY_HABITS_LIST, null) ?: return emptyList()
+        val type = object : TypeToken<List<Habit>>() {}.type
+        return try {
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    fun addHabit(habit: Habit) {
+        val habits = getHabits().toMutableList()
+        habits.add(habit)
+        saveHabits(habits)
+    }
+    
+    fun updateHabit(habit: Habit) {
+        val habits = getHabits().toMutableList()
+        val index = habits.indexOfFirst { it.id == habit.id }
+        if (index != -1) {
+            habits[index] = habit.copy(updatedAt = System.currentTimeMillis())
+        } else {
+            habits.add(habit)
+        }
+        saveHabits(habits)
+    }
+    
+    fun deleteHabit(habitId: String) {
+        val habits = getHabits().filter { it.id != habitId }
+        saveHabits(habits)
+    }
+    
+    fun getHabitEntriesForGoal(goalId: String): List<HabitEntry> {
+        return getHabitEntries().filter { it.goalId == goalId }
+    }
+    
+    fun getHabitEntriesForDateRange(startDate: Long, endDate: Long): List<HabitEntry> {
+        return getHabitEntries().filter { 
+            it.date >= startDate && it.date <= endDate 
+        }
+    }
+    
+    // ======================== JOURNAL ========================
+    
+    fun saveJournalEntries(entries: List<JournalEntry>) {
+        val json = gson.toJson(entries)
+        prefs.edit().putString(KEY_JOURNAL_ENTRIES, json).apply()
+    }
+    
+    fun getJournalEntries(): List<JournalEntry> {
+        val json = prefs.getString(KEY_JOURNAL_ENTRIES, null) ?: return emptyList()
+        val type = object : TypeToken<List<JournalEntry>>() {}.type
+        return try {
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    fun addJournalEntry(entry: JournalEntry) {
+        val entries = getJournalEntries().toMutableList()
+        entries.add(0, entry)
+        saveJournalEntries(entries)
+    }
+    
+    fun updateJournalEntry(entry: JournalEntry) {
+        val entries = getJournalEntries().toMutableList()
+        val index = entries.indexOfFirst { it.id == entry.id }
+        if (index != -1) {
+            entries[index] = entry.copy(updatedAt = System.currentTimeMillis())
+        } else {
+            entries.add(entry)
+        }
+        saveJournalEntries(entries)
+    }
+    
+    fun deleteJournalEntry(entryId: String) {
+        val entries = getJournalEntries().filter { it.id != entryId }
+        saveJournalEntries(entries)
+    }
+    
+    fun getJournalEntryForDate(date: Long): JournalEntry? {
+        val startOfDay = getStartOfDay(date)
+        val endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1
+        return getJournalEntries().firstOrNull { 
+            it.date >= startOfDay && it.date <= endOfDay 
+        }
+    }
+    
+    fun getJournalEntriesForDateRange(startDate: Long, endDate: Long): List<JournalEntry> {
+        return getJournalEntries().filter { 
+            it.date >= startDate && it.date <= endDate 
+        }
+    }
+    
+    fun saveJournalPrompts(prompts: List<JournalPrompt>) {
+        val json = gson.toJson(prompts)
+        prefs.edit().putString(KEY_JOURNAL_PROMPTS, json).apply()
+    }
+    
+    fun getJournalPrompts(): List<JournalPrompt> {
+        val json = prefs.getString(KEY_JOURNAL_PROMPTS, null) ?: return emptyList()
+        val type = object : TypeToken<List<JournalPrompt>>() {}.type
+        return try {
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    // ======================== RECENT SEARCHES ========================
+    
+    fun saveRecentSearches(searches: List<String>) {
+        val json = gson.toJson(searches)
+        prefs.edit().putString(KEY_RECENT_SEARCHES, json).apply()
+    }
+    
+    fun getRecentSearches(): List<String> {
+        val json = prefs.getString(KEY_RECENT_SEARCHES, null) ?: return emptyList()
+        val type = object : TypeToken<List<String>>() {}.type
+        return try {
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    fun addRecentSearch(query: String) {
+        val searches = getRecentSearches().toMutableList()
+        searches.remove(query) // Remove if exists
+        searches.add(0, query)
+        saveRecentSearches(searches.take(10)) // Keep only last 10
+    }
+
+    // ======================== FINANCE ========================
+
+    fun saveTransactions(transactions: List<Transaction>) {
+        val json = gson.toJson(transactions)
+        prefs.edit().putString(KEY_FINANCE_TRANSACTIONS, json).apply()
+    }
+
+    fun getTransactions(): List<Transaction> {
+        val json = prefs.getString(KEY_FINANCE_TRANSACTIONS, null) ?: return emptyList()
+        val type = object : TypeToken<List<Transaction>>() {}.type
+        return try {
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun addTransaction(transaction: Transaction) {
+        val list = getTransactions().toMutableList()
+        list.add(0, transaction)
+        saveTransactions(list)
+        logFinanceAction("ADD", "TRANSACTION", transaction.id, "Added ${transaction.type} of ${transaction.amount} in ${transaction.category}")
+        
+        // Update budget spent amount if it's an expense
+        if (transaction.type == TransactionType.EXPENSE) {
+            updateBudgetSpending(transaction.category, transaction.amount)
+        }
+    }
+
+    fun updateTransaction(transaction: Transaction) {
+        val list = getTransactions().toMutableList()
+        val index = list.indexOfFirst { it.id == transaction.id }
+        if (index != -1) {
+            val old = list[index]
+            list[index] = transaction
+            saveTransactions(list)
+            logFinanceAction("UPDATE", "TRANSACTION", transaction.id, "Updated transaction from ${old.amount} to ${transaction.amount}")
+        }
+    }
+
+    fun deleteTransaction(id: String) {
+        val list = getTransactions().toMutableList()
+        val transaction = list.find { it.id == id }
+        if (transaction != null) {
+            list.remove(transaction)
+            saveTransactions(list)
+            logFinanceAction("REMOVE", "TRANSACTION", id, "Removed transaction of ${transaction.amount}")
+            
+            // Revert budget spending if it was an expense
+            if (transaction.type == TransactionType.EXPENSE) {
+                updateBudgetSpending(transaction.category, -transaction.amount)
+            }
+        }
+    }
+
+    // Budgets
+    fun saveBudgets(budgets: List<Budget>) {
+        val json = gson.toJson(budgets)
+        prefs.edit().putString(KEY_FINANCE_BUDGETS, json).apply()
+    }
+
+    fun getBudgets(): List<Budget> {
+        val json = prefs.getString(KEY_FINANCE_BUDGETS, null) ?: return emptyList()
+        val type = object : TypeToken<List<Budget>>() {}.type
+        return try {
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun addBudget(budget: Budget) {
+        val list = getBudgets().toMutableList()
+        list.add(budget)
+        saveBudgets(list)
+        logFinanceAction("ADD", "BUDGET", budget.id, "Added budget for ${budget.category ?: "Overall"} with limit ${budget.limitAmount}")
+    }
+    
+    fun removeBudget(id: String) {
+        val list = getBudgets().toMutableList()
+        val budget = list.find { it.id == id }
+        if (budget != null) {
+            list.remove(budget)
+            saveBudgets(list)
+            logFinanceAction("REMOVE", "BUDGET", id, "Removed budget for ${budget.category ?: "Overall"}")
+        }
+    }
+
+    private fun updateBudgetSpending(category: TransactionCategory, amount: Double) {
+        val budgets = getBudgets().toMutableList()
+        var changed = false
+        for (i in budgets.indices) {
+            if (budgets[i].category == category || budgets[i].category == null) {
+                budgets[i] = budgets[i].copy(spentAmount = budgets[i].spentAmount + amount)
+                changed = true
+            }
+        }
+        if (changed) saveBudgets(budgets)
+    }
+
+    // Logs
+    fun saveFinanceLogs(logs: List<FinanceLog>) {
+        val json = gson.toJson(logs)
+        prefs.edit().putString(KEY_FINANCE_LOGS, json).apply()
+    }
+
+    fun getFinanceLogs(): List<FinanceLog> {
+        val json = prefs.getString(KEY_FINANCE_LOGS, null) ?: return emptyList()
+        val type = object : TypeToken<List<FinanceLog>>() {}.type
+        return try {
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun logFinanceAction(action: String, entityType: String, entityId: String, description: String) {
+        val logs = getFinanceLogs().toMutableList()
+        logs.add(0, FinanceLog(
+            action = action,
+            entityType = entityType,
+            description = description
+        ))
+        saveFinanceLogs(logs.take(1000)) // Keep last 1000 logs
+    }
+
+    fun getFinanceStats(): FinanceStats {
+        val transactions = getTransactions()
+        val budgets = getBudgets()
+        
+        val income = transactions.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
+        val expense = transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
+        val borrowed = transactions.filter { it.type == TransactionType.BORROWED && !it.isSettled }.sumOf { it.amount }
+        val lent = transactions.filter { it.type == TransactionType.LENT && !it.isSettled }.sumOf { it.amount }
+        
+        return FinanceStats(
+            totalIncome = income,
+            totalExpense = expense,
+            currentBalance = income - expense + borrowed - lent,
+            totalBorrowed = borrowed,
+            totalLent = lent,
+            budgetStatus = budgets,
+            recentTransactions = transactions.take(10)
+        )
     }
 }

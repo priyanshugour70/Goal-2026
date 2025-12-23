@@ -82,8 +82,11 @@ fun Goal2026Theme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = Color.Transparent.toArgb()
-            window.navigationBarColor = Color.Transparent.toArgb()
+            // Set status bar and navigation bar to match theme
+            val statusBarColor = if (darkTheme) Color.Black else Color.White
+            window.statusBarColor = statusBarColor.toArgb()
+            window.navigationBarColor = statusBarColor.toArgb()
+            // Light icons for dark theme (black bg), dark icons for light theme (white bg)
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }

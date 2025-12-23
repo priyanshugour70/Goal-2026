@@ -5,13 +5,19 @@ package com.lssgoo.goal2026.data.model
  * This wraps all user data for export/import
  */
 data class AppData(
-    val version: Int = 1,
+    val version: Int = 3,
     val exportedAt: Long = System.currentTimeMillis(),
     val goals: List<Goal> = emptyList(),
     val notes: List<Note> = emptyList(),
     val tasks: List<Task> = emptyList(),
     val events: List<CalendarEvent> = emptyList(),
+    val reminders: List<Reminder>? = null, 
     val habitEntries: List<HabitEntry> = emptyList(),
+    val habits: List<Habit>? = null, 
+    val journalEntries: List<JournalEntry>? = null,
+    val transactions: List<Transaction>? = null,
+    val budgets: List<Budget>? = null,
+    val logs: List<FinanceLog>? = null,
     val settings: AppSettings = AppSettings()
 )
 

@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+keystore.properties
+s3.properties
+*.jks
