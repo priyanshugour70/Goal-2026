@@ -2,6 +2,7 @@ package com.lssgoo.planner.data.repository
 
 import com.lssgoo.planner.data.local.LocalStorageManager
 import com.lssgoo.planner.data.model.Task
+import com.lssgoo.planner.data.model.TaskPriority
 import java.util.Calendar
 
 /**
@@ -10,7 +11,47 @@ import java.util.Calendar
 class TaskRepository(private val storage: LocalStorageManager) {
 
     fun getTasks(): List<Task> {
-        return storage.getTasks()
+        val tasks = storage.getTasks()
+        if (tasks.isEmpty()) {
+            return seedDefaultTasks()
+        }
+        return tasks
+    }
+
+    private fun seedDefaultTasks(): List<Task> {
+        val today = getStartOfDay(System.currentTimeMillis())
+        val defaults = listOf(
+            Task(
+                title = "Plan my 2026 goals",
+                description = "Outline the key achievements for this year",
+                priority = TaskPriority.HIGH,
+                dueDate = today + 9 * 60 * 60 * 1000,
+                tags = listOf(com.lssgoo.planner.features.tasks.models.TaskTags.PERSONAL)
+            ),
+            Task(
+                title = "Check weekly grocery",
+                description = "Milk, Fruits, and Vegetables",
+                priority = TaskPriority.MEDIUM,
+                dueDate = today + 18 * 60 * 60 * 1000,
+                tags = listOf(com.lssgoo.planner.features.tasks.models.TaskTags.SHOPPING)
+            ),
+            Task(
+                title = "Morning focused work block",
+                description = "Complete the most important task of the day",
+                priority = TaskPriority.URGENT,
+                dueDate = today + 10 * 60 * 60 * 1000,
+                tags = listOf(com.lssgoo.planner.features.tasks.models.TaskTags.OFFICE)
+            ),
+            Task(
+                title = "Evening walk or exercise",
+                description = "Stay healthy and active",
+                priority = TaskPriority.LOW,
+                dueDate = today + 19 * 60 * 60 * 1000,
+                tags = listOf(com.lssgoo.planner.features.tasks.models.TaskTags.HEALTH)
+            )
+        )
+        storage.saveTasks(defaults)
+        return defaults
     }
 
     fun saveTask(task: Task) {

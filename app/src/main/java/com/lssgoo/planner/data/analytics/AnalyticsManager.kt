@@ -86,7 +86,7 @@ class AnalyticsManager(
         val byPriority = filteredTasks.groupBy { it.priority }
             .mapValues { it.value.count { t -> t.isCompleted } }
         
-        val byCategory = filteredTasks.groupBy { it.category ?: "Uncategorized" }
+        val byCategory = filteredTasks.groupBy { it.tags.firstOrNull() ?: "Uncategorized" }
             .mapValues { it.value.count { t -> t.isCompleted } }
         
         // Calculate average completion time (simplified)
