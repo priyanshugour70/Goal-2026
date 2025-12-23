@@ -29,6 +29,7 @@ import com.lssgoo.goal2026.data.model.*
 import com.lssgoo.goal2026.ui.theme.*
 import com.lssgoo.goal2026.ui.components.AppIcons
 import com.lssgoo.goal2026.ui.viewmodel.Goal2026ViewModel
+import androidx.compose.material3.Switch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -120,6 +121,83 @@ fun SettingsScreen(
                     userProfile = userProfile,
                     stats = stats
                 )
+            }
+            
+            // Appearance Section
+            item {
+                var showThemeDialog by remember { mutableStateOf(false) }
+                
+                SettingsSection(
+                    title = "Appearance",
+                    icon = Icons.Outlined.Palette
+                ) {
+                    SettingsItem(
+                        icon = if (settings.themeMode == ThemeMode.DARK) Icons.Filled.DarkMode 
+                               else if (settings.themeMode == ThemeMode.LIGHT) Icons.Filled.LightMode
+                               else Icons.Filled.BrightnessAuto,
+                        title = "Theme",
+                        subtitle = when (settings.themeMode) {
+                            ThemeMode.LIGHT -> "Light"
+                            ThemeMode.DARK -> "Dark"
+                            ThemeMode.SYSTEM -> "System Default"
+                        },
+                        onClick = { showThemeDialog = true },
+                        iconColor = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                // Theme Selection Dialog
+                if (showThemeDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showThemeDialog = false },
+                        icon = {
+                            Icon(
+                                Icons.Filled.Palette,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        title = { Text("Choose Theme") },
+                        text = {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                ThemeOption(
+                                    icon = Icons.Filled.LightMode,
+                                    title = "Light",
+                                    isSelected = settings.themeMode == ThemeMode.LIGHT,
+                                    onClick = {
+                                        viewModel.updateSettings(settings.copy(themeMode = ThemeMode.LIGHT))
+                                        showThemeDialog = false
+                                    }
+                                )
+                                ThemeOption(
+                                    icon = Icons.Filled.DarkMode,
+                                    title = "Dark",
+                                    isSelected = settings.themeMode == ThemeMode.DARK,
+                                    onClick = {
+                                        viewModel.updateSettings(settings.copy(themeMode = ThemeMode.DARK))
+                                        showThemeDialog = false
+                                    }
+                                )
+                                ThemeOption(
+                                    icon = Icons.Filled.BrightnessAuto,
+                                    title = "System Default",
+                                    isSelected = settings.themeMode == ThemeMode.SYSTEM,
+                                    onClick = {
+                                        viewModel.updateSettings(settings.copy(themeMode = ThemeMode.SYSTEM))
+                                        showThemeDialog = false
+                                    }
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { showThemeDialog = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
+                }
             }
             
             // Data Management Section
@@ -554,6 +632,48 @@ fun StatRow(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold
         )
+    }
+}
+
+@Composable
+fun ThemeOption(
+    icon: ImageVector,
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isSelected) MaterialTheme.colorScheme.primary 
+                  else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (isSelected) MaterialTheme.colorScheme.primary 
+                   else MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        if (isSelected) {
+            Icon(
+                Icons.Filled.CheckCircle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
     }
 }
 

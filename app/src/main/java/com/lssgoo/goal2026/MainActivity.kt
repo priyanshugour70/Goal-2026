@@ -27,6 +27,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -56,7 +63,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Goal2026Theme {
+            val viewModel: Goal2026ViewModel = viewModel()
+            val settings by viewModel.settings.collectAsState()
+            
+            Goal2026Theme(themeMode = settings.themeMode) {
                 Goal2026App()
             }
         }
@@ -72,17 +82,21 @@ fun Goal2026App() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     
-    // Get user profile and onboarding status
-    val userProfile by viewModel.userProfile.collectAsState()
+    // Get onboarding status
     val isOnboardingComplete by viewModel.isOnboardingComplete.collectAsState()
     
     // Dynamic status bar color based on current route
     val view = LocalView.current
     val statusBarColor = getStatusBarColorForRoute(currentRoute)
+    val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF0D0D1A) // backgroundDark
     
-    LaunchedEffect(currentRoute, statusBarColor) {
+    LaunchedEffect(currentRoute, statusBarColor, isDarkTheme) {
         if (!view.isInEditMode) {
             val window = (view.context as android.app.Activity).window
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !isDarkTheme
+            // Set status bar color - using deprecated method for compatibility
+            @Suppress("DEPRECATION")
             window.statusBarColor = statusBarColor.toArgb()
         }
     }
@@ -119,7 +133,8 @@ fun Goal2026App() {
                         currentRoute = currentRoute
                     )
                 }
-            }
+            },
+            contentWindowInsets = WindowInsets.systemBars
         ) { paddingValues ->
             NavHost(
                 navController = navController,
@@ -202,21 +217,13 @@ fun Goal2026App() {
 
 /**
  * Get dynamic status bar color based on current route
- * Inspired by Google Maps and Dynamic Island approach
+ * Matches the background color to prevent visual collapse while maintaining edge-to-edge
  */
 @Composable
 fun getStatusBarColorForRoute(route: String?): Color {
-    return when {
-        route == Routes.DASHBOARD -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-        route == Routes.GOALS -> MaterialTheme.colorScheme.primaryContainer
-        route?.startsWith("goal/") == true -> Color.Transparent
-        route == Routes.CALENDAR -> MaterialTheme.colorScheme.secondaryContainer
-        route == Routes.NOTES -> MaterialTheme.colorScheme.tertiaryContainer
-        route == Routes.TASKS -> MaterialTheme.colorScheme.background
-        route == Routes.REMINDERS -> MaterialTheme.colorScheme.primaryContainer
-        route == Routes.SETTINGS -> MaterialTheme.colorScheme.background
-        else -> MaterialTheme.colorScheme.background
-    }
+    // Always match the background color to prevent collapse
+    // The status bar will blend seamlessly with the app background
+    return MaterialTheme.colorScheme.background
 }
 
 /**
@@ -343,12 +350,6 @@ fun DynamicNavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val animatedWeight by animateFloatAsState(
-        targetValue = if (isSelected) 1.5f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "weight"
-    )
-    
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
@@ -495,12 +496,6 @@ fun NavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val animatedWeight by animateFloatAsState(
-        targetValue = if (isSelected) 1.5f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "weight"
-    )
-    
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))

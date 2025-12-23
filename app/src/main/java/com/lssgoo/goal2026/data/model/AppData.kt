@@ -16,10 +16,31 @@ data class AppData(
 )
 
 /**
+ * Theme mode enum
+ * Using string values for Gson serialization compatibility
+ */
+enum class ThemeMode(val value: String) {
+    LIGHT("LIGHT"),
+    DARK("DARK"),
+    SYSTEM("SYSTEM");
+    
+    companion object {
+        fun fromString(value: String?): ThemeMode {
+            return when (value) {
+                "LIGHT" -> LIGHT
+                "DARK" -> DARK
+                "SYSTEM" -> SYSTEM
+                else -> SYSTEM // Default to SYSTEM
+            }
+        }
+    }
+}
+
+/**
  * App settings
  */
 data class AppSettings(
-    val isDarkMode: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val notificationsEnabled: Boolean = true,
     val dailyReminderTime: String = "08:00",
     val weeklyReviewDay: Int = 0, // 0 = Sunday

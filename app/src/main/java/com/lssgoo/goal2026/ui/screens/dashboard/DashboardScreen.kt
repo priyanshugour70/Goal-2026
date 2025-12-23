@@ -8,6 +8,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -38,6 +41,8 @@ fun DashboardScreen(
     onViewAllTasks: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Get safe area insets
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     val stats by viewModel.dashboardStats.collectAsState()
     val goals by viewModel.goals.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -70,7 +75,10 @@ fun DashboardScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(bottom = 100.dp)
+        contentPadding = PaddingValues(
+            top = statusBarPadding.calculateTopPadding(),
+            bottom = 100.dp
+        )
     ) {
         // Header with gradient
         item {
@@ -86,7 +94,7 @@ fun DashboardScreen(
                         )
                     )
                     .padding(horizontal = 20.dp)
-                    .padding(top = 60.dp, bottom = 20.dp)
+                    .padding(top = 20.dp, bottom = 20.dp)
             ) {
                 Column {
                     Text(

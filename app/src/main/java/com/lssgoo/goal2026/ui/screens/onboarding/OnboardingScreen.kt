@@ -9,6 +9,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -75,9 +80,13 @@ fun OnboardingScreen(
         else -> true
     }
     
+    // Get safe area insets
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
+    
     Box(
         modifier = modifier
             .fillMaxSize()
+            .padding(systemBarsPadding)
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
