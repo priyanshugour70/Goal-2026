@@ -38,6 +38,9 @@ data class Transaction(
     val personName: String? = null, // Used for Debt/Lent
     val date: Long = System.currentTimeMillis(),
     val isSettled: Boolean = false, // For debts
+    val receiptUri: String? = null, // For receipts (Option 5)
+    val isRecurring: Boolean = false, // For recurring transactions (Option 4)
+    val recurringPeriod: BudgetPeriod? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
 
@@ -48,7 +51,8 @@ data class Budget(
     val spentAmount: Double = 0.0,
     val period: BudgetPeriod = BudgetPeriod.MONTHLY,
     val startDate: Long = System.currentTimeMillis(),
-    val endDate: Long? = null
+    val endDate: Long? = null,
+    val notifiedAt: Long? = null // For budget alerts (Option 6)
 )
 
 enum class BudgetPeriod {
@@ -57,7 +61,7 @@ enum class BudgetPeriod {
 
 data class FinanceLog(
     val id: String = UUID.randomUUID().toString(),
-    val action: String, // "ADD", "REMOVE", "UPDATE"
+    val action: String, // "ADD", "REMOVE", "UPDATE", "SETTLED"
     val entityType: String, // "TRANSACTION", "BUDGET"
     val timestamp: Long = System.currentTimeMillis(),
     val description: String
@@ -70,5 +74,10 @@ data class FinanceStats(
     val totalBorrowed: Double = 0.0,
     val totalLent: Double = 0.0,
     val budgetStatus: List<Budget> = emptyList(),
-    val recentTransactions: List<Transaction> = emptyList()
+    val recentTransactions: List<Transaction> = emptyList(),
+    // New fields for Analytics & Charts (Option 1)
+    val categorySpending: Map<TransactionCategory, Double> = emptyMap(),
+    val dailySpending: Map<Long, Double> = emptyMap(), // Date to amount
+    val incomeVsExpense: Map<Long, Pair<Double, Double>> = emptyMap(),
+    val upcomingRecurring: List<Transaction> = emptyList() // (Option 4)
 )

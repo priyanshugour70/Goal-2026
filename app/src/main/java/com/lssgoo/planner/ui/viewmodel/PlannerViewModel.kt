@@ -31,8 +31,31 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     private val _isCheckingSync = MutableStateFlow(false)
     val isCheckingSync: StateFlow<Boolean> = _isCheckingSync.asStateFlow()
 
+    private val financeRepository = com.lssgoo.planner.data.repository.FinanceRepository(storageManager)
+    
+    // Feature data states
+    val goals = MutableStateFlow<List<Goal>>(emptyList())
+    val tasks = MutableStateFlow<List<Task>>(emptyList())
+    val notes = MutableStateFlow<List<Note>>(emptyList())
+    val reminders = MutableStateFlow<List<Reminder>>(emptyList())
+    val journalEntries = MutableStateFlow<List<JournalEntry>>(emptyList())
+    val habits = MutableStateFlow<List<Habit>>(emptyList())
+    val transactions = MutableStateFlow<List<Transaction>>(emptyList())
+    val financeLogs = MutableStateFlow<List<FinanceLog>>(emptyList())
+    val budgets = MutableStateFlow<List<Budget>>(emptyList())
+    val dashboardStats = MutableStateFlow(DashboardStats())
+    val financeStats = MutableStateFlow(FinanceStats())
+    val analyticsData = MutableStateFlow<AnalyticsData?>(null)
+    val searchQuery = MutableStateFlow("")
+    val searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
+    val recentSearches = MutableStateFlow<List<String>>(emptyList())
+    val searchFilters = MutableStateFlow(SearchFilters())
+    val selectedDate = MutableStateFlow(System.currentTimeMillis())
+    val events = MutableStateFlow<List<CalendarEvent>>(emptyList())
+
     init {
         checkCloudBackup()
+        loadFinanceData()
     }
 
     private fun checkCloudBackup() {
@@ -121,26 +144,15 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
     fun exportDataToFile(context: Context): android.net.Uri? = null
     fun importData(json: String): Boolean = true
     fun initializeAutoSync() {}
-    
-    // Feature data states
-    val goals = MutableStateFlow<List<Goal>>(emptyList())
-    val tasks = MutableStateFlow<List<Task>>(emptyList())
-    val notes = MutableStateFlow<List<Note>>(emptyList())
-    val reminders = MutableStateFlow<List<Reminder>>(emptyList())
-    val journalEntries = MutableStateFlow<List<JournalEntry>>(emptyList())
-    val habits = MutableStateFlow<List<Habit>>(emptyList())
-    val transactions = MutableStateFlow<List<Transaction>>(emptyList())
-    val financeLogs = MutableStateFlow<List<FinanceLog>>(emptyList())
-    val budgets = MutableStateFlow<List<Budget>>(emptyList())
-    val dashboardStats = MutableStateFlow(DashboardStats())
-    val financeStats = MutableStateFlow(FinanceStats())
-    val analyticsData = MutableStateFlow<AnalyticsData?>(null)
-    val searchQuery = MutableStateFlow("")
-    val searchResults = MutableStateFlow<List<SearchResult>>(emptyList())
-    val recentSearches = MutableStateFlow<List<String>>(emptyList())
-    val searchFilters = MutableStateFlow(SearchFilters())
-    val selectedDate = MutableStateFlow(System.currentTimeMillis())
-    val events = MutableStateFlow<List<CalendarEvent>>(emptyList())
+
+    private fun loadFinanceData() {
+        viewModelScope.launch {
+            transactions.value = financeRepository.getTransactions()
+            budgets.value = financeRepository.getBudgets()
+            financeLogs.value = financeRepository.getLogs()
+            financeStats.value = financeRepository.getFinanceStats()
+        }
+    }
 
     // Feature methods
     fun refreshAnalytics() {}
@@ -165,16 +177,51 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
             syncToCloud()
         }
     }
-    fun updateTransaction(tr: Transaction) {}
-    fun deleteTransaction(id: String) {}
-    fun addTransaction(tr: Transaction) {
+    fun updateTransaction(tr: Transaction) {
         viewModelScope.launch {
-            storageManager.addTransaction(tr)
+            financeRepository.updateTransaction(tr)
+            loadFinanceData()
             syncToCloud()
         }
     }
-    fun addBudget(b: Budget) {}
-    fun removeBudget(id: String) {}
+    fun deleteTransaction(id: String) {
+        viewModelScope.launch {
+            financeRepository.deleteTransaction(id)
+            loadFinanceData()
+            syncToCloud()
+        }
+    }
+    fun addTransaction(tr: Transaction) {
+        viewModelScope.launch {
+            financeRepository.addTransaction(tr)
+            loadFinanceData()
+            syncToCloud()
+        }
+    }
+    fun addBudget(b: Budget) {
+        viewModelScope.launch {
+            financeRepository.addBudget(b)
+            loadFinanceData()
+            syncToCloud()
+        }
+    }
+    fun removeBudget(id: String) {
+        viewModelScope.launch {
+            financeRepository.removeBudget(id)
+            loadFinanceData()
+            syncToCloud()
+        }
+    }
+
+    fun settleDebt(id: String) {
+        viewModelScope.launch {
+            financeRepository.settleDebt(id)
+            loadFinanceData()
+            syncToCloud()
+        }
+    }
+
+    fun exportFinanceCSV(): String = financeRepository.generateTransactionsCSV()
     fun addHabit(h: Habit) {
         viewModelScope.launch {
             storageManager.addHabit(h)
