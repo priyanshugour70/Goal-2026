@@ -190,7 +190,8 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
                     SettingsScreen(
                         viewModel = rootViewModel,
                         onBack = { navController.popBackStack() },
-                        onNavigateToPin = { navController.navigate(Routes.APPLOCK) }
+                        onNavigateToPin = { navController.navigate(Routes.APPLOCK) },
+                        onNavigate = { navController.navigate(it) }
                     )
                 }
                 
@@ -211,6 +212,22 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
                 
                 composable(Routes.ANALYTICS) {
                     AnalyticsScreen(viewModel = rootViewModel)
+                }
+
+                composable(Routes.ABOUT_DEVELOPER) {
+                    com.lssgoo.planner.features.settings.screens.AboutDeveloperScreen(onBack = { navController.popBackStack() })
+                }
+
+                composable(Routes.VERSION_HISTORY) {
+                    com.lssgoo.planner.features.settings.screens.VersionHistoryScreen(onBack = { navController.popBackStack() })
+                }
+
+                composable(Routes.PRIVACY_POLICY) {
+                    com.lssgoo.planner.features.settings.screens.PrivacyPolicyScreen(onBack = { navController.popBackStack() })
+                }
+
+                composable(Routes.TERMS_OF_SERVICE) {
+                    com.lssgoo.planner.features.settings.screens.TermsOfServiceScreen(onBack = { navController.popBackStack() })
                 }
             }
         }

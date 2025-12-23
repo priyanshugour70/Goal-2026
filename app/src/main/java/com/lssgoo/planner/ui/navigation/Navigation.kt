@@ -33,6 +33,12 @@ object Routes {
     const val JOURNAL_ENTRY = "journal/{entryId}"
     const val FINANCE = "finance"
     
+    // Settings Sub-pages
+    const val ABOUT_DEVELOPER = "about_developer"
+    const val VERSION_HISTORY = "version_history"
+    const val PRIVACY_POLICY = "privacy_policy"
+    const val TERMS_OF_SERVICE = "terms_of_service"
+    
     fun goalDetail(goalId: String) = "goal/$goalId"
     fun noteDetail(noteId: String) = "note/$noteId"
     fun habitDetail(habitId: String) = "habit/$habitId"

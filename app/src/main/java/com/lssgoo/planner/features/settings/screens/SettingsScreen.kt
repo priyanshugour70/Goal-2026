@@ -49,6 +49,7 @@ fun SettingsScreen(
     viewModel: PlannerViewModel,
     onBack: () -> Unit,
     onNavigateToPin: () -> Unit,
+    onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -432,8 +433,8 @@ fun SettingsScreen(
                     SettingsItem(
                         icon = Icons.Outlined.Info,
                         title = "App Version",
-                        subtitle = "1.0.0",
-                        onClick = { },
+                        subtitle = "1.2.0 (Click to see history)",
+                        onClick = { onNavigate(com.lssgoo.planner.ui.navigation.Routes.VERSION_HISTORY) },
                         iconColor = GoalColors.learning
                     )
                     
@@ -442,9 +443,35 @@ fun SettingsScreen(
                     SettingsItem(
                         icon = Icons.Outlined.Code,
                         title = "Developer",
-                        subtitle = "Built with ❤️ for your goals",
-                        onClick = { },
+                        subtitle = "Built with ❤️ by LSSGOO",
+                        onClick = { onNavigate(com.lssgoo.planner.ui.navigation.Routes.ABOUT_DEVELOPER) },
                         iconColor = GoalColors.startup
+                    )
+                }
+            }
+            
+            // Legal Section
+            item {
+                SettingsSection(
+                    title = "Legal",
+                    icon = Icons.Outlined.Gavel
+                ) {
+                    SettingsItem(
+                        icon = Icons.Outlined.VerifiedUser,
+                        title = "Privacy Policy",
+                        subtitle = "How we protect your data",
+                        onClick = { onNavigate(com.lssgoo.planner.ui.navigation.Routes.PRIVACY_POLICY) },
+                        iconColor = GoalColors.health
+                    )
+                    
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    
+                    SettingsItem(
+                        icon = Icons.Outlined.Gavel,
+                        title = "Terms of Service",
+                        subtitle = "App usage agreements",
+                        onClick = { onNavigate(com.lssgoo.planner.ui.navigation.Routes.TERMS_OF_SERVICE) },
+                        iconColor = GoalColors.career
                     )
                 }
             }
