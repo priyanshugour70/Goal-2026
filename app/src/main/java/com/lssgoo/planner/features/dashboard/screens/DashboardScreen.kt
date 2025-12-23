@@ -73,8 +73,8 @@ fun DashboardScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(
-            top = statusBarPadding.calculateTopPadding() + 8.dp, // Reduced from 16.dp
-            bottom = 100.dp
+            top = 8.dp,
+            bottom = 120.dp
         )
     ) {
         // Header
@@ -82,15 +82,16 @@ fun DashboardScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = greeting,
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 
                 // Search Bar
                 Surface(

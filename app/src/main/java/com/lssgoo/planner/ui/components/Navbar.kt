@@ -2,6 +2,7 @@ package com.lssgoo.planner.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -45,15 +46,16 @@ fun DynamicBottomNavBar(
 
     // Scroll to active item when it changes
     LaunchedEffect(currentIndex) {
-        // Approximate width for item (width varies due to expanded text)
-        // Scroll to the current item's approximate position
         scrollState.animateScrollTo(currentIndex * 70)
     }
     
+    val canScrollLeft by remember { derivedStateOf { scrollState.value > 0 } }
+    val canScrollRight by remember { derivedStateOf { scrollState.canScrollForward } }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp) // Reduced padding
+            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp) // Lifted bottom padding
     ) {
         Card(
             modifier = Modifier
@@ -72,31 +74,39 @@ fun DynamicBottomNavBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 6.dp),
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left Button
-                IconButton(
-                    onClick = {
-                        if (currentIndex > 0) {
-                            val prev = destinations[currentIndex - 1]
-                            navController.navigate(prev.route) {
-                                popUpTo(Routes.DASHBOARD) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    },
-                    modifier = Modifier.size(36.dp),
-                    enabled = currentIndex > 0
+                // Left Chevron
+                AnimatedVisibility(
+                    visible = canScrollLeft,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally()
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ChevronLeft,
-                        contentDescription = "Previous",
-                        tint = if (currentIndex > 0) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                    )
+                    Box(modifier = Modifier.width(32.dp), contentAlignment = Alignment.Center) {
+                        IconButton(
+                            onClick = {
+                                if (currentIndex > 0) {
+                                    navController.navigate(destinations[currentIndex - 1].route) {
+                                        popUpTo(Routes.DASHBOARD) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.ChevronLeft,
+                                null,
+                                tint = accentColor.copy(alpha = 0.6f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 }
 
+                // Scrollable Destinations
                 Box(modifier = Modifier.weight(1f)) {
                     Row(
                         modifier = Modifier
@@ -124,26 +134,33 @@ fun DynamicBottomNavBar(
                     }
                 }
 
-                // Right Button
-                IconButton(
-                    onClick = {
-                        if (currentIndex < destinations.size - 1) {
-                            val next = destinations[currentIndex + 1]
-                            navController.navigate(next.route) {
-                                popUpTo(Routes.DASHBOARD) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    },
-                    modifier = Modifier.size(36.dp),
-                    enabled = currentIndex < destinations.size - 1
+                // Right Chevron
+                AnimatedVisibility(
+                    visible = canScrollRight,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally()
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "Next",
-                        tint = if (currentIndex < destinations.size - 1) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                    )
+                    Box(modifier = Modifier.width(32.dp), contentAlignment = Alignment.Center) {
+                        IconButton(
+                            onClick = {
+                                if (currentIndex < destinations.size - 1) {
+                                    navController.navigate(destinations[currentIndex + 1].route) {
+                                        popUpTo(Routes.DASHBOARD) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                null,
+                                tint = accentColor.copy(alpha = 0.6f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -160,29 +177,26 @@ fun DynamicNavItem(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(
-                if (isSelected) accentColor.copy(alpha = 0.15f) else Color.Transparent
-            )
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .background(if (isSelected) accentColor.copy(alpha = 0.12f) else Color.Transparent)
+            .clickable { onClick() }
+            .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            IconButton(onClick = onClick, modifier = Modifier.size(if (isSelected) 36.dp else 32.dp)) {
-                Icon(
-                    imageVector = if (isSelected) destination.selectedIcon else destination.unselectedIcon,
-                    contentDescription = destination.label,
-                    tint = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(if (isSelected) 26.dp else 24.dp)
-                )
-            }
+            Icon(
+                imageVector = if (isSelected) destination.selectedIcon else destination.unselectedIcon,
+                contentDescription = destination.label,
+                tint = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                modifier = Modifier.size(if (isSelected) 22.dp else 20.dp)
+            )
             
             AnimatedVisibility(visible = isSelected) {
                 Text(
                     text = destination.label,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
                     color = accentColor,
                     modifier = Modifier.padding(start = 4.dp)
                 )

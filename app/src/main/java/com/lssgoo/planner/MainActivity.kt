@@ -83,7 +83,8 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
         val showBottomBar = currentRoute in BottomNavDestination.entries.map { it.route }
         
         Scaffold(
-            bottomBar = { if (showBottomBar) DynamicBottomNavBar(navController, currentRoute) }
+            bottomBar = { if (showBottomBar) DynamicBottomNavBar(navController, currentRoute) },
+            contentWindowInsets = WindowInsets(0, 0, 0, 0) // Fully controlled space
         ) { paddingValues ->
             NavHost(
                 navController = navController,
@@ -91,8 +92,16 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
                 modifier = Modifier.fillMaxSize().padding(paddingValues)
             ) {
                 composable(Routes.DASHBOARD) {
-                    val vm: DashboardViewModel = viewModel()
-                    DashboardScreen(viewModel = rootViewModel, onGoalClick = { navController.navigate(Routes.goalDetail(it)) }, onViewAllGoals = { navController.navigate(Routes.GOALS) }, onViewAllTasks = { navController.navigate(Routes.TASKS) }, onViewAllHabits = { navController.navigate(Routes.HABITS) }, onViewAllJournal = { navController.navigate(Routes.JOURNAL) }, onViewAllNotes = { navController.navigate(Routes.NOTES) }, onSearchClick = { navController.navigate(Routes.SEARCH) })
+                    DashboardScreen(
+                        viewModel = rootViewModel,
+                        onGoalClick = { navController.navigate(Routes.goalDetail(it)) },
+                        onViewAllGoals = { navController.navigate(Routes.GOALS) },
+                        onViewAllTasks = { navController.navigate(Routes.TASKS) },
+                        onViewAllHabits = { navController.navigate(Routes.HABITS) },
+                        onViewAllJournal = { navController.navigate(Routes.JOURNAL) },
+                        onViewAllNotes = { navController.navigate(Routes.NOTES) },
+                        onSearchClick = { navController.navigate(Routes.SEARCH) }
+                    )
                 }
                 
                 composable(Routes.GOALS) {
@@ -112,31 +121,36 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
                 }
                 
                 composable(Routes.NOTES) {
-                    val vm: NotesViewModel = viewModel()
-                    NotesScreen(viewModel = rootViewModel) // Temporary until NotesScreen updated
+                    NotesScreen(viewModel = rootViewModel)
                 }
                 
                 composable(Routes.FINANCE) {
-                    val vm: FinanceViewModel = viewModel()
-                    FinanceScreen(viewModel = rootViewModel) // Temporary
+                    FinanceScreen(viewModel = rootViewModel)
                 }
                 
                 composable(Routes.CALENDAR) {
-                    val vm: CalendarViewModel = viewModel()
-                    CalendarScreen(viewModel = rootViewModel) // Temporary
+                    CalendarScreen(viewModel = rootViewModel)
                 }
 
                 composable(Routes.SEARCH) {
-                    val vm: SearchViewModel = viewModel()
-                    SearchScreen(viewModel = rootViewModel, onBack = { navController.popBackStack() }, onResultClick = { /* Handle */ }) // Temporary
+                    SearchScreen(viewModel = rootViewModel, onBack = { navController.popBackStack() }, onResultClick = { /* Handle */ })
                 }
 
                 composable(Routes.SETTINGS) {
-                    val vm: SettingsViewModel = viewModel()
-                    SettingsScreen(viewModel = rootViewModel, onBack = { navController.popBackStack() }) // Temporary
+                    SettingsScreen(viewModel = rootViewModel, onBack = { navController.popBackStack() })
                 }
                 
-                // Add more routes as needed...
+                composable(Routes.HABITS) {
+                    HabitsScreen(viewModel = rootViewModel, onHabitClick = { /* Edit Logic */ })
+                }
+                
+                composable(Routes.JOURNAL) {
+                    JournalScreen(viewModel = rootViewModel, onEntryClick = { /* Detail Logic */ })
+                }
+                
+                composable(Routes.ANALYTICS) {
+                    AnalyticsScreen(viewModel = rootViewModel)
+                }
             }
         }
     }
