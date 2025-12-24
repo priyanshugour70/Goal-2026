@@ -33,7 +33,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.border
-import com.lssgoo.planner.data.model.*
+import com.lssgoo.planner.data.model.Goal
+import com.lssgoo.planner.data.model.GoalCategory
+import com.lssgoo.planner.features.settings.models.ThemeMode
+import com.lssgoo.planner.features.settings.models.DashboardStats
+import com.lssgoo.planner.features.settings.models.AppSettings
+import com.lssgoo.planner.features.settings.models.UserProfile
+import com.lssgoo.planner.features.settings.models.Gender
 import com.lssgoo.planner.ui.theme.*
 import com.lssgoo.planner.ui.components.AppIcons
 import com.lssgoo.planner.ui.viewmodel.PlannerViewModel
