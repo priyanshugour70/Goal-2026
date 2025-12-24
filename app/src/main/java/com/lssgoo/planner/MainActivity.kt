@@ -41,6 +41,10 @@ import com.lssgoo.planner.features.search.screens.SearchScreen
 import com.lssgoo.planner.features.analytics.screens.AnalyticsScreen
 import com.lssgoo.planner.features.journal.screens.JournalScreen
 import com.lssgoo.planner.features.finance.screens.FinanceScreen
+import com.lssgoo.planner.features.notes.screens.NoteDetailScreen
+import com.lssgoo.planner.features.habits.screens.HabitDetailScreen
+import com.lssgoo.planner.features.journal.screens.JournalEntryScreen
+import com.lssgoo.planner.features.search.models.SearchResultType
 import com.lssgoo.planner.ui.components.DynamicBottomNavBar
 import com.lssgoo.planner.ui.navigation.BottomNavDestination
 import com.lssgoo.planner.ui.navigation.Routes
@@ -183,7 +187,23 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
                 }
 
                 composable(Routes.SEARCH) {
-                    SearchScreen(viewModel = rootViewModel, onBack = { navController.popBackStack() }, onResultClick = { /* Handle */ })
+                    SearchScreen(
+                        viewModel = rootViewModel,
+                        onBack = { navController.popBackStack() },
+                        onResultClick = { result ->
+                            when (result.type) {
+                                SearchResultType.GOAL -> navController.navigate(Routes.goalDetail(result.id))
+                                SearchResultType.TASK -> navController.navigate(Routes.TASKS)
+                                SearchResultType.NOTE -> navController.navigate(Routes.noteDetail(result.id))
+                                SearchResultType.HABIT -> navController.navigate(Routes.habitDetail(result.id))
+                                SearchResultType.JOURNAL -> navController.navigate(Routes.journalEntry(result.id))
+                                SearchResultType.EVENT -> navController.navigate(Routes.CALENDAR)
+                                SearchResultType.REMINDER -> navController.navigate(Routes.CALENDAR)
+                                SearchResultType.MILESTONE -> navController.navigate(Routes.goalDetail(result.id))
+                                SearchResultType.FINANCE -> navController.navigate(Routes.FINANCE)
+                            }
+                        }
+                    )
                 }
 
                 composable(Routes.SETTINGS) {
@@ -203,11 +223,17 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
                 }
                 
                 composable(Routes.HABITS) {
-                    HabitsScreen(viewModel = rootViewModel, onHabitClick = { /* Edit Logic */ })
+                    HabitsScreen(
+                        viewModel = rootViewModel,
+                        onHabitClick = { habitId -> navController.navigate(Routes.habitDetail(habitId)) }
+                    )
                 }
                 
                 composable(Routes.JOURNAL) {
-                    JournalScreen(viewModel = rootViewModel, onEntryClick = { /* Detail Logic */ })
+                    JournalScreen(
+                        viewModel = rootViewModel,
+                        onEntryClick = { entryId -> navController.navigate(Routes.journalEntry(entryId)) }
+                    )
                 }
                 
                 composable(Routes.ANALYTICS) {
@@ -228,6 +254,40 @@ fun PlannerApp(rootViewModel: PlannerViewModel) {
 
                 composable(Routes.TERMS_OF_SERVICE) {
                     com.lssgoo.planner.features.settings.screens.TermsOfServiceScreen(onBack = { navController.popBackStack() })
+                }
+                
+                // Detail Screens
+                composable(
+                    Routes.NOTE_DETAIL,
+                    arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    NoteDetailScreen(
+                        noteId = backStackEntry.arguments?.getString("noteId") ?: "",
+                        viewModel = rootViewModel,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                
+                composable(
+                    Routes.HABIT_DETAIL,
+                    arguments = listOf(navArgument("habitId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    HabitDetailScreen(
+                        habitId = backStackEntry.arguments?.getString("habitId") ?: "",
+                        viewModel = rootViewModel,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                
+                composable(
+                    Routes.JOURNAL_ENTRY,
+                    arguments = listOf(navArgument("entryId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    JournalEntryScreen(
+                        entryId = backStackEntry.arguments?.getString("entryId") ?: "",
+                        viewModel = rootViewModel,
+                        onBack = { navController.popBackStack() }
+                    )
                 }
             }
         }

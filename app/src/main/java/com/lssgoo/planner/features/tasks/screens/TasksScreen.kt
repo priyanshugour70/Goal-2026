@@ -137,11 +137,7 @@ fun TasksScreen(
                     item(key = "header_$header") {
                         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                             if (header != groupedTasks.keys.first()) {
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                )
+                                Spacer(modifier = Modifier.height(16.dp))
                             }
                             Text(
                                 text = header,

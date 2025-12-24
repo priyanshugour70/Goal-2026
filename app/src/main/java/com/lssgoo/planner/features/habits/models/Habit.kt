@@ -2,10 +2,10 @@ package com.lssgoo.planner.features.habits.models
 
 import java.util.UUID
 
-enum class HabitType {
-    YES_NO,       // Simple checkbox
-    QUANTITATIVE, // Count (e.g., 5 glasses of water)
-    TIMER         // Duration (e.g., 10 mins meditation)
+enum class HabitType(val displayName: String) {
+    YES_NO("Yes/No"),           // Simple checkbox
+    QUANTITATIVE("Quantitative"), // Count (e.g., 5 glasses of water)
+    TIMER("Timer")               // Duration (e.g., 10 mins meditation)
 }
 
 enum class HabitTimeOfDay(val displayName: String) {

@@ -338,6 +338,18 @@ class PlannerViewModel(application: Application) : BaseViewModel(application) {
             }
         }
     }
+    
+    fun deleteJournalEntry(entryId: String) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                storageManager.deleteJournalEntry(entryId)
+                loadJournalData()
+                syncToCloud()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     fun getJournalEntryForDate(d: Long): JournalEntry? {
         val dayStart = getStartOfDay(d)
