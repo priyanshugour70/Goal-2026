@@ -42,9 +42,13 @@ object TaskTags {
     const val HEALTH = "Health"
     const val SHOPPING = "Shopping"
     const val TRAVEL = "Travel"
+    const val WORK = "Work"
+    const val STUDY = "Study"
+    const val FINANCE = "Finance"
+    const val URGENT = "Urgent"
     const val OTHER = "Other"
 
-    val ALL = listOf(PERSONAL, OFFICE, HEALTH, SHOPPING, TRAVEL, OTHER)
+    val ALL = listOf(PERSONAL, OFFICE, HEALTH, SHOPPING, TRAVEL, WORK, STUDY, FINANCE, URGENT, OTHER)
     
     fun getColorForTag(tag: String): Long = when(tag) {
         PERSONAL -> 0xFF2196F3 // Blue
@@ -52,6 +56,10 @@ object TaskTags {
         HEALTH -> 0xFF4CAF50   // Green
         SHOPPING -> 0xFFE91E63 // Pink
         TRAVEL -> 0xFF9C27B0   // Purple
+        WORK -> 0xFF795548     // Brown
+        STUDY -> 0xFF673AB7    // Deep Purple
+        FINANCE -> 0xFF009688  // Teal
+        URGENT -> 0xFFF44336   // Red
         else -> 0xFF607D8B     // Grey
     }
 }

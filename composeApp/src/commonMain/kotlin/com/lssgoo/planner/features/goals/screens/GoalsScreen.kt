@@ -25,8 +25,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 /**
  * Goals list screen - follows SRP and size constraints
  */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 enum class SortOrder {
     DEFAULT, DATE_ASC, NAME_ASC
 }

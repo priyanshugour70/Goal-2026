@@ -23,6 +23,12 @@ fun GoalCategory.getIcon(): ImageVector {
         GoalCategory.FINANCE -> Icons.Default.Savings
         GoalCategory.STARTUP -> Icons.Default.RocketLaunch
         GoalCategory.MINDFULNESS -> Icons.Default.SelfImprovement
+        GoalCategory.TRAVEL -> Icons.Default.Flight
+        GoalCategory.RELATIONSHIPS -> Icons.Default.Favorite
+        GoalCategory.SPIRITUALITY -> Icons.Default.SelfImprovement
+        GoalCategory.SOCIAL -> Icons.Default.Public
+        GoalCategory.CREATIVITY -> Icons.Default.Brush
+        GoalCategory.ENVIRONMENT -> Icons.Default.Eco
     }
 }
 

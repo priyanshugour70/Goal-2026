@@ -6,8 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,8 +38,12 @@ fun TasksScreen(
     val goals by viewModel.goals.collectAsState()
     
     var selectedFilter by remember { mutableStateOf(TaskFilter.ALL) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
+    
     var showAddTaskSheet by remember { mutableStateOf(false) }
     var editingTask by remember { mutableStateOf<Task?>(null) }
+    var taskToDelete by remember { mutableStateOf<Task?>(null) }
     
     val today = remember {
         KmpTimeUtils.getStartOfDay(Clock.System.now().toEpochMilliseconds())
@@ -47,46 +51,85 @@ fun TasksScreen(
     val tomorrow = today + 24 * 60 * 60 * 1000
     val dayAfterTomorrow = tomorrow + 24 * 60 * 60 * 1000
     
-    val filteredTasks = when (selectedFilter) {
-        TaskFilter.ALL -> tasks
-        TaskFilter.TODAY -> tasks.filter { it.dueDate?.let { d -> d in today until tomorrow } ?: false }
-        TaskFilter.UPCOMING -> tasks.filter { !it.isCompleted && (it.dueDate == null || it.dueDate >= tomorrow) }
-        TaskFilter.COMPLETED -> tasks.filter { it.isCompleted }
-        TaskFilter.OVERDUE -> tasks.filter { !it.isCompleted && it.dueDate != null && it.dueDate < today }
+    val filteredTasks = remember(tasks, selectedFilter, searchQuery) {
+        tasks.filter { task ->
+            val matchesFilter = when (selectedFilter) {
+                TaskFilter.ALL -> true
+                TaskFilter.TODAY -> task.dueDate?.let { d -> d in today until tomorrow } ?: false
+                TaskFilter.UPCOMING -> !task.isCompleted && (task.dueDate == null || task.dueDate >= tomorrow)
+                TaskFilter.COMPLETED -> task.isCompleted
+                TaskFilter.OVERDUE -> !task.isCompleted && task.dueDate != null && task.dueDate < today
+            }
+            val matchesSearch = task.title.contains(searchQuery, ignoreCase = true) || 
+                              task.description.contains(searchQuery, ignoreCase = true)
+            matchesFilter && matchesSearch
+        }
     }
 
     // Grouping logic for date-wise display
     val groupedTasks = remember(filteredTasks) {
-        filteredTasks.sortedBy { it.dueDate ?: Long.MAX_VALUE }
-            .groupBy { task ->
-                val date = task.dueDate
-                when {
-                    task.isCompleted -> "Completed"
-                    date == null -> "No Deadline"
-                    date < today -> "Overdue"
-                    date < tomorrow -> "Today"
-                    date < dayAfterTomorrow -> "Tomorrow"
-                    else -> KmpDateFormatter.formatDate(date)
-                }
+        filteredTasks.sortedWith(
+            compareBy<Task> { it.isCompleted } // Completed tasks last
+                .thenBy { it.dueDate ?: Long.MAX_VALUE }
+        ).groupBy { task ->
+            val date = task.dueDate
+            when {
+                task.isCompleted -> "Completed ✅"
+                date == null -> "No Deadline 📅"
+                date < today -> "Overdue ⚠️"
+                date < tomorrow -> "Today ⚡"
+                date < dayAfterTomorrow -> "Tomorrow 🌅"
+                else -> KmpDateFormatter.formatDate(date)
             }
+        }
     }
     
     Scaffold(
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.background
+                color = MaterialTheme.colorScheme.background,
+                shadowElevation = if (isSearchActive) 4.dp else 0.dp
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
                 ) {
-                    Icon(AppIcons.Task, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text("Tasks", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    if (isSearchActive) {
+                        SearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            onSearch = { isSearchActive = false },
+                            active = false,
+                            onActiveChange = { },
+                            placeholder = { Text("Search tasks...") },
+                            leadingIcon = { Icon(Icons.Default.Search, null) },
+                            trailingIcon = { 
+                                IconButton(onClick = { 
+                                    searchQuery = ""
+                                    isSearchActive = false 
+                                }) { Icon(Icons.Default.Close, null) }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(AppIcons.Task, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Tasks", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                            }
+                            IconButton(onClick = { isSearchActive = true }) {
+                                Icon(Icons.Default.Search, null)
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -98,6 +141,13 @@ fun TasksScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
+            item {
+                TaskStatsHeader(
+                    tasks = tasks,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
             item {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
@@ -119,30 +169,30 @@ fun TasksScreen(
             if (filteredTasks.isEmpty()) {
                 item {
                     EmptyState(
-                        title = "No tasks found",
+                        title = if (searchQuery.isNotEmpty()) "No results for \"$searchQuery\"" else "No tasks found",
                         description = "Try changing the filter or add a new task",
                         icon = AppIcons.Task,
-                        modifier = Modifier.padding(top = 80.dp)
+                        modifier = Modifier.padding(top = 40.dp)
                     )
                 }
             } else {
-                // Grouped tasks with sticky headers or just headers
                 groupedTasks.forEach { (header, tasksInGroup) ->
-                    item(key = "header_$header") {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                            if (header != groupedTasks.keys.first()) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
+                    stickyHeader {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.background
+                        ) {
                             Text(
                                 text = header,
                                 style = MaterialTheme.typography.labelLarge,
-                                color = when(header) {
-                                    "Overdue" -> MaterialTheme.colorScheme.error
-                                    "Today" -> MaterialTheme.colorScheme.primary
-                                    "Completed" -> MaterialTheme.colorScheme.outline
+                                color = when {
+                                    header.contains("Overdue") -> MaterialTheme.colorScheme.error
+                                    header.contains("Today") -> MaterialTheme.colorScheme.primary
+                                    header.contains("Completed") -> MaterialTheme.colorScheme.outline
                                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                                 },
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.ExtraBold,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                             )
                         }
                     }
@@ -153,7 +203,7 @@ fun TasksScreen(
                             goals = goals,
                             onToggle = { viewModel.toggleTaskCompletion(task.id) },
                             onClick = { editingTask = task },
-                            onDelete = { viewModel.deleteTask(task.id) },
+                            onDelete = { taskToDelete = task },
                             modifier = Modifier.animateItem().padding(horizontal = 16.dp, vertical = 4.dp)
                         )
                     }
@@ -171,11 +221,43 @@ fun TasksScreen(
                 if (editingTask != null) viewModel.updateTask(task) else viewModel.addTask(task)
                 showAddTaskSheet = false; editingTask = null
             },
-            onDelete = { taskId -> viewModel.deleteTask(taskId); editingTask = null }
+            onDelete = { taskId -> 
+                taskToDelete = tasks.find { it.id == taskId }
+                editingTask = null 
+            }
+        )
+    }
+
+    if (taskToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { taskToDelete = null },
+            title = { Text("Delete Task?") },
+            text = { Text("Are you sure you want to delete \"${taskToDelete?.title}\"? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        taskToDelete?.id?.let { viewModel.deleteTask(it) }
+                        taskToDelete = null
+                        showAddTaskSheet = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { taskToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }
 
 enum class TaskFilter(val displayName: String) {
-    ALL("All"), TODAY("Today"), UPCOMING("Upcoming"), COMPLETED("Completed"), OVERDUE("Overdue")
+    ALL("All Tasks"), 
+    TODAY("Today"), 
+    UPCOMING("Upcoming"), 
+    COMPLETED("Done"), 
+    OVERDUE("Overdue")
 }

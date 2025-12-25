@@ -58,6 +58,30 @@ fun OnboardingScreen(viewModel: PlannerViewModel) {
                 .windowInsetsPadding(WindowInsets.systemBars),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Skip button at the top (only show if not on FINISH step)
+            if (step != OnboardingStep.FINISH) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            viewModel.setOnboardingComplete(true)
+                        }
+                    ) {
+                        Text(
+                            text = "Skip",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(48.dp))
+            }
+            
             // Step Indicator
             OnboardingProgress(currentStep = step)
             
@@ -88,7 +112,7 @@ fun OnboardingScreen(viewModel: PlannerViewModel) {
                                 viewModel.updateSettings(viewModel.settings.value.copy(themeMode = it)) 
                             }
                         )
-                        OnboardingStep.FINISH -> FinishView(firstName = firstName)
+                        OnboardingStep.FINISH -> FinishView(firstName = firstName.ifBlank { "there" })
                     }
                 }
             }
@@ -104,15 +128,19 @@ fun OnboardingScreen(viewModel: PlannerViewModel) {
                         OnboardingStep.PROFILE -> if (firstName.isNotBlank()) step = OnboardingStep.THEME
                         OnboardingStep.THEME -> step = OnboardingStep.FINISH
                         OnboardingStep.FINISH -> {
-                            viewModel.saveUserProfile(
-                                UserProfile(
-                                    firstName = firstName,
-                                    lastName = lastName,
-                                    email = email,
-                                    isOnboardingComplete = true
-                                )
-                            )
-                            viewModel.setOnboardingComplete(true)
+                            scope.launch {
+                                if (firstName.isNotBlank()) {
+                                    viewModel.saveUserProfile(
+                                        UserProfile(
+                                            firstName = firstName,
+                                            lastName = lastName,
+                                            email = email,
+                                            isOnboardingComplete = true
+                                        )
+                                    )
+                                }
+                                viewModel.setOnboardingComplete(true)
+                            }
                         }
                     }
                 },

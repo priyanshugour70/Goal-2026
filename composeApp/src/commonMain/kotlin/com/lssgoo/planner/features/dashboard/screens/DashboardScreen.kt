@@ -339,8 +339,10 @@ fun DashboardScreen(
             items(upcomingTasks.take(3)) { task ->
                 TaskItem(
                     task = task,
+                    goals = goals,
                     onToggle = { viewModel.toggleTaskCompletion(task.id) },
                     onClick = { },
+                    onDelete = { },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
