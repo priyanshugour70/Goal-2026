@@ -29,6 +29,12 @@ kotlin {
         }
     }
     
+    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
+        binaries.all {
+            freeCompilerArgs += listOf("-Xbinary=bundleId=com.lssgoo.planner.ComposeApp")
+        }
+    }
+    
     sourceSets {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)

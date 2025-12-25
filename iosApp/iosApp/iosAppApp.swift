@@ -6,7 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(composeApp)
 import composeApp
+#endif
 
 @main
 struct iosAppApp: App {
@@ -16,3 +18,4 @@ struct iosAppApp: App {
         }
     }
 }
+
