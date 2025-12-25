@@ -40,6 +40,7 @@ object Routes {
     const val VERSION_HISTORY = "version_history"
     const val PRIVACY_POLICY = "privacy_policy"
     const val TERMS_OF_SERVICE = "terms_of_service"
+    const val DATA_USAGE = "data_usage"
     
     fun goalDetail(goalId: String) = "goal/$goalId"
     fun noteDetail(noteId: String) = "note/$noteId"

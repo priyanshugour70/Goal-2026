@@ -194,11 +194,15 @@ fun MainScreen(viewModel: PlannerViewModel) {
             composable(Routes.TERMS_OF_SERVICE) {
                 com.lssgoo.planner.features.settings.screens.TermsOfServiceScreen(onBack = { navController.popBackStack() })
             }
-            composable(Routes.APPLOCK) {
-                // Placeholder for App Lock Setup
-                androidx.compose.material3.Text("App Lock Setup Coming Soon", modifier = Modifier.padding(16.dp))
-                // In real app, this would be PinSetupScreen
+            composable(Routes.DATA_USAGE) {
+                com.lssgoo.planner.features.settings.screens.DataUsageScreen(onBack = { navController.popBackStack() })
             }
+            composable(Routes.APPLOCK) {
+                com.lssgoo.planner.features.settings.screens.AppLockScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }    // In real app, this would be PinSetupScreen
         }
     }
 }

@@ -142,7 +142,12 @@ class PlannerViewModel(
     
     fun updateSettings(newSettings: AppSettings) {
         viewModelScope.launch {
-            settingsRepository.saveSettings(newSettings)
+            val result = settingsRepository.saveSettings(newSettings)
+            if (result is Resource.Success) {
+                _settings.value = newSettings
+                // Also update onboarding state if it changed
+                _isOnboardingComplete.value = newSettings.isOnboardingCompleted
+            }
         }
     }
     

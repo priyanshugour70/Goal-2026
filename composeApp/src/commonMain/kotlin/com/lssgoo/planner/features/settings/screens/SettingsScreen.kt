@@ -151,9 +151,7 @@ fun SettingsScreen(
                     )
                 }
                 
-                // Security Section
 
-                
                 // Theme Selection Dialog
                 if (showThemeDialog) {
                     Dialog(
@@ -653,6 +651,16 @@ fun SettingsScreen(
                         subtitle = "App usage agreements",
                         onClick = { onNavigate(com.lssgoo.planner.ui.navigation.Routes.TERMS_OF_SERVICE) },
                         iconColor = GoalColors.career
+                    )
+
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                    SettingsItem(
+                        icon = Icons.Outlined.Description,
+                        title = "Data Usage Policy",
+                        subtitle = "How your data is stored",
+                        onClick = { onNavigate(com.lssgoo.planner.ui.navigation.Routes.DATA_USAGE) },
+                        iconColor = GoalColors.lifestyle
                     )
                 }
             }
